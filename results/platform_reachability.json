@@ -1,0 +1,120 @@
+{
+  "conclusion": {
+    "incident_spinner_platform_displacement_y": 0.0,
+    "stale_platform_reuse_reachable_at_incident": false,
+    "platform_mechanism_can_explain_3155_25_upwarp": false
+  },
+  "source_proof": {
+    "update_order": {
+      "file": "sm64/src/game/object_list_processor.c",
+      "lines": [642, 670],
+      "facts": [
+        "Dynamic surfaces are cleared, terrain objects update, then the retained gMarioPlatform pointer is applied.",
+        "Non-terrain objects update and deactivated objects unload before update_mario_platform records the next pointer."
+      ]
+    },
+    "displacement_function": {
+      "file": "sm64/src/game/platform_displacement.c",
+      "lines": [91, 176],
+      "facts": [
+        "Y is assigned only inside the nonzero angular-velocity branch.",
+        "Object oVelY is not applied; only oVelX and oVelZ are added outside that branch.",
+        "A NULL retained pointer performs no displacement."
+      ]
+    },
+    "spinner_behavior": {
+      "file": "sm64/src/game/behaviors/ttc_spinner.inc.c",
+      "lines": [9, 36],
+      "facts": [
+        "TTC_SPEED_STOPPED assigns oAngleVelPitch=0.",
+        "The behavior has no deletion, deactivation, respawn, or pointer mutation path."
+      ]
+    },
+    "spinner_script": {
+      "file": "sm64/data/behavior_data.c",
+      "lines": [5547, 5556],
+      "facts": [
+        "The spinner is a persistent OBJ_LIST_SURFACE macro object.",
+        "Its loop only updates spinner rotation and loads its collision model."
+      ]
+    },
+    "fresh_object_initialization": {
+      "file": "sm64/src/game/spawn_object.c",
+      "lines": [208, 293],
+      "facts": [
+        "Allocation zeros all 0x50 raw-data words, including face-angle and angular-velocity fields.",
+        "A reused slot therefore cannot inherit a prior platform's angular velocity."
+      ]
+    }
+  },
+  "incident_reachability": {
+    "spinner_slot": 46,
+    "spinner_behavior": "0x800ED090",
+    "spinner_center": [1102.0, -4233.0, 1682.0],
+    "spinner_top_incident_y": -4207.0,
+    "reachable_retained_pointers": ["NULL", "slot 46"],
+    "grid_experiment": {
+      "x": [700, 1250],
+      "z": [1450, 2150],
+      "step": 10,
+      "y": -4207,
+      "points": 3976,
+      "null": 3215,
+      "slot_46": 761,
+      "other_object_slots": 0,
+      "malformed_pointers": 0,
+      "log": "results/platform_reachability_grid.log"
+    },
+    "lifetime_observation": {
+      "traced_movies": 27,
+      "mario_rows": 4860,
+      "object_rows": 418304,
+      "movies_with_post_ttc_slot_behavior_change": 0,
+      "pitch_or_roll_velocity_rows_after_ttc_load": 0,
+      "platform_contact_frames_in_supplied_attempts": 0,
+      "summary": "results/platform_corpus_summary.json"
+    }
+  },
+  "sweeps": {
+    "actual_stopped_spinner": {
+      "tested_positions": 7,
+      "maximum_final_frame_y_delta": 0.0
+    },
+    "retained_active_object_slots": {
+      "active_slots": 122,
+      "positions_per_slot": 7,
+      "trials": 854,
+      "maximum_final_frame_y_delta": 25.0004883,
+      "interpretation": "The 25-unit result is an ordinary collision snap onto the spinner's raised center ridge, not retained-platform displacement; every retained object had zero pitch/roll angular velocity."
+    },
+    "counterfactual_fast_spinner": {
+      "speed_setting": "TTC_SPEED_FAST",
+      "angular_step_units": 600,
+      "phase_coverage": [0, 65535],
+      "phases_tested": 65536,
+      "position": [800.0, -4207.0, 1900.0],
+      "maximum_final_frame_y_delta": 21.3769531,
+      "trials_with_y_delta_at_least_100": 0,
+      "summary": "results/platform_sweep_summary.json"
+    }
+  },
+  "analytic_bounds": {
+    "incident_setting_angular_step": 0,
+    "incident_setting_maximum_displacement": 0.0,
+    "counterfactual_fast_angular_step_radians": 0.05752427954571154,
+    "preferred_point_radius_from_spinner_axis": 373.36845072930305,
+    "preferred_point_total_displacement_bound": 21.47478997260356,
+    "whole_search_envelope_maximum_radius": 631.1236012066099,
+    "whole_search_envelope_total_displacement_bound": 36.299925063811656,
+    "derivation": "For rigid rotation by theta, total point displacement is at most 2*r*sin(theta/2); vertical displacement cannot exceed total displacement."
+  },
+  "stale_pointer_assessment": {
+    "required_chain": [
+      "Mario stands within four units of a dynamic floor and gMarioPlatform records its object.",
+      "That exact object unloads after its surface remains available to find_floor.",
+      "A different terrain object allocates the same slot before the next frame's apply call.",
+      "The replacement has nonzero pitch or roll angular velocity and a sufficiently remote axis."
+    ],
+    "incident_failure": "The floor owner is persistent spinner slot 46. It neither unloads nor changes identity, and TTC_SPEED_STOPPED gives it zero pitch/roll angular velocity. The required chain cannot begin."
+  }
+}

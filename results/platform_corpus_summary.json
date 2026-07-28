@@ -1,0 +1,1863 @@
+{
+  "all_finished_movies": 27,
+  "movies": [
+    {
+      "actions": [],
+      "gameplay_bounds": {
+        "ceil_height": null,
+        "floor_height": null,
+        "forward_vel": null,
+        "vx": null,
+        "vy": null,
+        "vz": null,
+        "x": null,
+        "y": null,
+        "z": null
+      },
+      "incident_spinner_slots": {},
+      "largest_upward_step": 0.0,
+      "largest_upward_step_vi": 0,
+      "mario_rows": 120,
+      "movie": "tas1.m64",
+      "object_rows": 600,
+      "object_slots_with_behavior_changes": {},
+      "pitch_or_roll_velocity_rows": 0,
+      "platform_contact_frames": 0,
+      "platform_slots": [],
+      "ttc_first_vi": null,
+      "ttc_speed_settings": []
+    },
+    {
+      "actions": [
+        "00001325",
+        "00001924",
+        "04000440",
+        "0400044A",
+        "0C400201"
+      ],
+      "gameplay_bounds": {
+        "ceil_height": [
+          -173.0,
+          20000.0
+        ],
+        "floor_height": [
+          -4822.0,
+          -4822.0
+        ],
+        "forward_vel": [
+          0.0,
+          12.3621063
+        ],
+        "vx": [
+          -1.39015019,
+          12.1282568
+        ],
+        "vy": [
+          -75.0,
+          0.0
+        ],
+        "vz": [
+          0.0,
+          2.39312553
+        ],
+        "x": [
+          1384.67932,
+          1506.1106
+        ],
+        "y": [
+          -4822.0,
+          -3822.0
+        ],
+        "z": [
+          -548.0,
+          -491.348022
+        ]
+      },
+      "incident_spinner_slots": {
+        "(1102, -4233, 1682)": [
+          46
+        ],
+        "(1102, -4848, 1682)": [
+          47
+        ],
+        "(424, -4540, 1959)": [
+          48
+        ]
+      },
+      "largest_upward_step": 0.0,
+      "largest_upward_step_vi": 191,
+      "mario_rows": 191,
+      "movie": "tas10.m64",
+      "object_rows": 17222,
+      "object_slots_with_behavior_changes": {},
+      "pitch_or_roll_velocity_rows": 0,
+      "platform_contact_frames": 0,
+      "platform_slots": [],
+      "ttc_first_vi": 53,
+      "ttc_speed_settings": [
+        3
+      ]
+    },
+    {
+      "actions": [
+        "00001325",
+        "00001924",
+        "04000440",
+        "0400044A",
+        "0C400201"
+      ],
+      "gameplay_bounds": {
+        "ceil_height": [
+          -173.0,
+          20000.0
+        ],
+        "floor_height": [
+          -4822.0,
+          -4822.0
+        ],
+        "forward_vel": [
+          0.0,
+          12.3621063
+        ],
+        "vx": [
+          -1.39015019,
+          11.4138269
+        ],
+        "vy": [
+          -75.0,
+          0.0
+        ],
+        "vz": [
+          0.0,
+          4.74828768
+        ],
+        "x": [
+          1384.67932,
+          1499.14319
+        ],
+        "y": [
+          -4822.0,
+          -3822.0
+        ],
+        "z": [
+          -548.0,
+          -467.849823
+        ]
+      },
+      "incident_spinner_slots": {
+        "(1102, -4233, 1682)": [
+          46
+        ],
+        "(1102, -4848, 1682)": [
+          47
+        ],
+        "(424, -4540, 1959)": [
+          48
+        ]
+      },
+      "largest_upward_step": 0.0,
+      "largest_upward_step_vi": 191,
+      "mario_rows": 191,
+      "movie": "tas11.m64",
+      "object_rows": 17222,
+      "object_slots_with_behavior_changes": {},
+      "pitch_or_roll_velocity_rows": 0,
+      "platform_contact_frames": 0,
+      "platform_slots": [],
+      "ttc_first_vi": 53,
+      "ttc_speed_settings": [
+        3
+      ]
+    },
+    {
+      "actions": [
+        "00001325",
+        "00001924",
+        "04000440",
+        "0400044A",
+        "0C400201"
+      ],
+      "gameplay_bounds": {
+        "ceil_height": [
+          -173.0,
+          20000.0
+        ],
+        "floor_height": [
+          -4822.0,
+          -4822.0
+        ],
+        "forward_vel": [
+          0.0,
+          11.5302515
+        ],
+        "vx": [
+          -1.39015019,
+          8.3872509
+        ],
+        "vy": [
+          -75.0,
+          0.0
+        ],
+        "vz": [
+          0.0,
+          7.91206217
+        ],
+        "x": [
+          1384.67932,
+          1459.07092
+        ],
+        "y": [
+          -4822.0,
+          -3822.0
+        ],
+        "z": [
+          -548.0,
+          -445.13623
+        ]
+      },
+      "incident_spinner_slots": {
+        "(1102, -4233, 1682)": [
+          46
+        ],
+        "(1102, -4848, 1682)": [
+          47
+        ],
+        "(424, -4540, 1959)": [
+          48
+        ]
+      },
+      "largest_upward_step": 0.0,
+      "largest_upward_step_vi": 189,
+      "mario_rows": 189,
+      "movie": "tas12.m64",
+      "object_rows": 16952,
+      "object_slots_with_behavior_changes": {},
+      "pitch_or_roll_velocity_rows": 0,
+      "platform_contact_frames": 0,
+      "platform_slots": [],
+      "ttc_first_vi": 53,
+      "ttc_speed_settings": [
+        3
+      ]
+    },
+    {
+      "actions": [
+        "00001325",
+        "00001924",
+        "04000440",
+        "0400044A",
+        "0C400201"
+      ],
+      "gameplay_bounds": {
+        "ceil_height": [
+          -173.0,
+          20000.0
+        ],
+        "floor_height": [
+          -4822.0,
+          -4822.0
+        ],
+        "forward_vel": [
+          0.0,
+          11.5302515
+        ],
+        "vx": [
+          -1.39015019,
+          7.96337652
+        ],
+        "vy": [
+          -75.0,
+          0.0
+        ],
+        "vz": [
+          0.0,
+          8.33854485
+        ],
+        "x": [
+          1384.67932,
+          1455.33801
+        ],
+        "y": [
+          -4822.0,
+          -3822.0
+        ],
+        "z": [
+          -548.0,
+          -441.341064
+        ]
+      },
+      "incident_spinner_slots": {
+        "(1102, -4233, 1682)": [
+          46
+        ],
+        "(1102, -4848, 1682)": [
+          47
+        ],
+        "(424, -4540, 1959)": [
+          48
+        ]
+      },
+      "largest_upward_step": 0.0,
+      "largest_upward_step_vi": 189,
+      "mario_rows": 189,
+      "movie": "tas13.m64",
+      "object_rows": 16848,
+      "object_slots_with_behavior_changes": {},
+      "pitch_or_roll_velocity_rows": 0,
+      "platform_contact_frames": 0,
+      "platform_slots": [],
+      "ttc_first_vi": 53,
+      "ttc_speed_settings": [
+        3
+      ]
+    },
+    {
+      "actions": [
+        "00001325",
+        "00001924",
+        "04000440",
+        "0400044A",
+        "0C400201"
+      ],
+      "gameplay_bounds": {
+        "ceil_height": [
+          -173.0,
+          20000.0
+        ],
+        "floor_height": [
+          -4822.0,
+          -4822.0
+        ],
+        "forward_vel": [
+          0.0,
+          13.9682293
+        ],
+        "vx": [
+          -1.39015019,
+          5.67606544
+        ],
+        "vy": [
+          -75.0,
+          0.0
+        ],
+        "vz": [
+          0.0,
+          13.8967018
+        ],
+        "x": [
+          1384.67932,
+          1421.54016
+        ],
+        "y": [
+          -4822.0,
+          -3822.0
+        ],
+        "z": [
+          -548.0,
+          -356.637543
+        ]
+      },
+      "incident_spinner_slots": {
+        "(1102, -4233, 1682)": [
+          46
+        ],
+        "(1102, -4848, 1682)": [
+          47
+        ],
+        "(424, -4540, 1959)": [
+          48
+        ]
+      },
+      "largest_upward_step": 0.0,
+      "largest_upward_step_vi": 189,
+      "mario_rows": 189,
+      "movie": "tas14.m64",
+      "object_rows": 16848,
+      "object_slots_with_behavior_changes": {},
+      "pitch_or_roll_velocity_rows": 0,
+      "platform_contact_frames": 0,
+      "platform_slots": [],
+      "ttc_first_vi": 53,
+      "ttc_speed_settings": [
+        3
+      ]
+    },
+    {
+      "actions": [
+        "00001325",
+        "00001924",
+        "04000440",
+        "0400044A",
+        "0C400201"
+      ],
+      "gameplay_bounds": {
+        "ceil_height": [
+          -173.0,
+          20000.0
+        ],
+        "floor_height": [
+          -4822.0,
+          -4822.0
+        ],
+        "forward_vel": [
+          0.0,
+          13.9682293
+        ],
+        "vx": [
+          -1.39015019,
+          6.32242489
+        ],
+        "vy": [
+          -75.0,
+          0.0
+        ],
+        "vz": [
+          0.0,
+          13.6914082
+        ],
+        "x": [
+          1384.67932,
+          1436.84387
+        ],
+        "y": [
+          -4822.0,
+          -3822.0
+        ],
+        "z": [
+          -548.0,
+          -361.01123
+        ]
+      },
+      "incident_spinner_slots": {
+        "(1102, -4233, 1682)": [
+          46
+        ],
+        "(1102, -4848, 1682)": [
+          47
+        ],
+        "(424, -4540, 1959)": [
+          48
+        ]
+      },
+      "largest_upward_step": 0.0,
+      "largest_upward_step_vi": 189,
+      "mario_rows": 189,
+      "movie": "tas15.m64",
+      "object_rows": 16848,
+      "object_slots_with_behavior_changes": {},
+      "pitch_or_roll_velocity_rows": 0,
+      "platform_contact_frames": 0,
+      "platform_slots": [],
+      "ttc_first_vi": 53,
+      "ttc_speed_settings": [
+        3
+      ]
+    },
+    {
+      "actions": [
+        "00001325",
+        "00001924",
+        "04000440",
+        "0400044A",
+        "0C400201"
+      ],
+      "gameplay_bounds": {
+        "ceil_height": [
+          -173.0,
+          20000.0
+        ],
+        "floor_height": [
+          -4822.0,
+          -4822.0
+        ],
+        "forward_vel": [
+          0.0,
+          13.9682293
+        ],
+        "vx": [
+          -1.39015019,
+          6.91304302
+        ],
+        "vy": [
+          -75.0,
+          0.0
+        ],
+        "vz": [
+          0.0,
+          13.3791389
+        ],
+        "x": [
+          1384.67932,
+          1450.18567
+        ],
+        "y": [
+          -4822.0,
+          -3822.0
+        ],
+        "z": [
+          -548.0,
+          -365.848022
+        ]
+      },
+      "incident_spinner_slots": {
+        "(1102, -4233, 1682)": [
+          46
+        ],
+        "(1102, -4848, 1682)": [
+          47
+        ],
+        "(424, -4540, 1959)": [
+          48
+        ]
+      },
+      "largest_upward_step": 0.0,
+      "largest_upward_step_vi": 189,
+      "mario_rows": 189,
+      "movie": "tas16 - Copy.m64",
+      "object_rows": 16848,
+      "object_slots_with_behavior_changes": {},
+      "pitch_or_roll_velocity_rows": 0,
+      "platform_contact_frames": 0,
+      "platform_slots": [],
+      "ttc_first_vi": 53,
+      "ttc_speed_settings": [
+        3
+      ]
+    },
+    {
+      "actions": [
+        "00001325",
+        "00001924",
+        "04000440",
+        "0400044A",
+        "0C400201"
+      ],
+      "gameplay_bounds": {
+        "ceil_height": [
+          -173.0,
+          20000.0
+        ],
+        "floor_height": [
+          -4822.0,
+          -4822.0
+        ],
+        "forward_vel": [
+          0.0,
+          13.9682293
+        ],
+        "vx": [
+          -1.39015019,
+          6.91304302
+        ],
+        "vy": [
+          -75.0,
+          0.0
+        ],
+        "vz": [
+          0.0,
+          13.3791389
+        ],
+        "x": [
+          1384.67932,
+          1450.18567
+        ],
+        "y": [
+          -4822.0,
+          -3822.0
+        ],
+        "z": [
+          -548.0,
+          -365.848022
+        ]
+      },
+      "incident_spinner_slots": {
+        "(1102, -4233, 1682)": [
+          46
+        ],
+        "(1102, -4848, 1682)": [
+          47
+        ],
+        "(424, -4540, 1959)": [
+          48
+        ]
+      },
+      "largest_upward_step": 0.0,
+      "largest_upward_step_vi": 189,
+      "mario_rows": 189,
+      "movie": "tas16.m64",
+      "object_rows": 16848,
+      "object_slots_with_behavior_changes": {},
+      "pitch_or_roll_velocity_rows": 0,
+      "platform_contact_frames": 0,
+      "platform_slots": [],
+      "ttc_first_vi": 53,
+      "ttc_speed_settings": [
+        3
+      ]
+    },
+    {
+      "actions": [
+        "00001325",
+        "00001924",
+        "04000440",
+        "0400044A",
+        "0C400201"
+      ],
+      "gameplay_bounds": {
+        "ceil_height": [
+          -173.0,
+          20000.0
+        ],
+        "floor_height": [
+          -4822.0,
+          -4822.0
+        ],
+        "forward_vel": [
+          0.0,
+          13.9682293
+        ],
+        "vx": [
+          -1.39015019,
+          6.91304302
+        ],
+        "vy": [
+          -75.0,
+          0.0
+        ],
+        "vz": [
+          0.0,
+          13.3791389
+        ],
+        "x": [
+          1384.67932,
+          1450.18567
+        ],
+        "y": [
+          -4822.0,
+          -3822.0
+        ],
+        "z": [
+          -548.0,
+          -365.848022
+        ]
+      },
+      "incident_spinner_slots": {
+        "(1102, -4233, 1682)": [
+          46
+        ],
+        "(1102, -4848, 1682)": [
+          47
+        ],
+        "(424, -4540, 1959)": [
+          48
+        ]
+      },
+      "largest_upward_step": 0.0,
+      "largest_upward_step_vi": 187,
+      "mario_rows": 187,
+      "movie": "tas17.m64",
+      "object_rows": 16604,
+      "object_slots_with_behavior_changes": {},
+      "pitch_or_roll_velocity_rows": 0,
+      "platform_contact_frames": 0,
+      "platform_slots": [],
+      "ttc_first_vi": 53,
+      "ttc_speed_settings": [
+        3
+      ]
+    },
+    {
+      "actions": [
+        "00001325",
+        "00001924",
+        "04000440",
+        "0400044A",
+        "0C400201"
+      ],
+      "gameplay_bounds": {
+        "ceil_height": [
+          -173.0,
+          20000.0
+        ],
+        "floor_height": [
+          -4822.0,
+          -4822.0
+        ],
+        "forward_vel": [
+          0.0,
+          13.9682293
+        ],
+        "vx": [
+          -1.39015019,
+          6.91304302
+        ],
+        "vy": [
+          -75.0,
+          0.0
+        ],
+        "vz": [
+          0.0,
+          13.3791389
+        ],
+        "x": [
+          1384.67932,
+          1450.18567
+        ],
+        "y": [
+          -4822.0,
+          -3822.0
+        ],
+        "z": [
+          -548.0,
+          -365.848022
+        ]
+      },
+      "incident_spinner_slots": {
+        "(1102, -4233, 1682)": [
+          46
+        ],
+        "(1102, -4848, 1682)": [
+          47
+        ],
+        "(424, -4540, 1959)": [
+          48
+        ]
+      },
+      "largest_upward_step": 0.0,
+      "largest_upward_step_vi": 191,
+      "mario_rows": 191,
+      "movie": "tas18.m64",
+      "object_rows": 17092,
+      "object_slots_with_behavior_changes": {},
+      "pitch_or_roll_velocity_rows": 0,
+      "platform_contact_frames": 0,
+      "platform_slots": [],
+      "ttc_first_vi": 53,
+      "ttc_speed_settings": [
+        3
+      ]
+    },
+    {
+      "actions": [
+        "00001325",
+        "00001924",
+        "04000440",
+        "0400044A",
+        "0C400201"
+      ],
+      "gameplay_bounds": {
+        "ceil_height": [
+          -173.0,
+          20000.0
+        ],
+        "floor_height": [
+          -4822.0,
+          -4822.0
+        ],
+        "forward_vel": [
+          0.0,
+          13.9682293
+        ],
+        "vx": [
+          -1.39015019,
+          6.91304302
+        ],
+        "vy": [
+          -75.0,
+          0.0
+        ],
+        "vz": [
+          0.0,
+          13.6741724
+        ],
+        "x": [
+          1384.67932,
+          1440.64807
+        ],
+        "y": [
+          -4822.0,
+          -3822.0
+        ],
+        "z": [
+          -548.0,
+          -363.209473
+        ]
+      },
+      "incident_spinner_slots": {
+        "(1102, -4233, 1682)": [
+          46
+        ],
+        "(1102, -4848, 1682)": [
+          47
+        ],
+        "(424, -4540, 1959)": [
+          48
+        ]
+      },
+      "largest_upward_step": 0.0,
+      "largest_upward_step_vi": 191,
+      "mario_rows": 191,
+      "movie": "tas19.m64",
+      "object_rows": 17144,
+      "object_slots_with_behavior_changes": {},
+      "pitch_or_roll_velocity_rows": 0,
+      "platform_contact_frames": 0,
+      "platform_slots": [],
+      "ttc_first_vi": 53,
+      "ttc_speed_settings": [
+        3
+      ]
+    },
+    {
+      "actions": [
+        "00001924"
+      ],
+      "gameplay_bounds": {
+        "ceil_height": [
+          5243.0,
+          20000.0
+        ],
+        "floor_height": [
+          -4822.0,
+          -4822.0
+        ],
+        "forward_vel": [
+          2.0,
+          2.0
+        ],
+        "vx": [
+          -1.39015019,
+          -1.39015019
+        ],
+        "vy": [
+          -16.0,
+          0.0
+        ],
+        "vz": [
+          1.4378742,
+          1.4378742
+        ],
+        "x": [
+          1411.43945,
+          1417.0
+        ],
+        "y": [
+          -3846.0,
+          -3822.0
+        ],
+        "z": [
+          -548.0,
+          -542.248047
+        ]
+      },
+      "incident_spinner_slots": {
+        "(1102, -4233, 1682)": [
+          46
+        ],
+        "(1102, -4848, 1682)": [
+          47
+        ],
+        "(424, -4540, 1959)": [
+          48
+        ]
+      },
+      "largest_upward_step": 0.0,
+      "largest_upward_step_vi": 73,
+      "mario_rows": 73,
+      "movie": "tas2.m64",
+      "object_rows": 2696,
+      "object_slots_with_behavior_changes": {},
+      "pitch_or_roll_velocity_rows": 0,
+      "platform_contact_frames": 0,
+      "platform_slots": [],
+      "ttc_first_vi": 53,
+      "ttc_speed_settings": [
+        3
+      ]
+    },
+    {
+      "actions": [
+        "00001325",
+        "00001924",
+        "04000440",
+        "0400044A",
+        "0C400201"
+      ],
+      "gameplay_bounds": {
+        "ceil_height": [
+          -173.0,
+          20000.0
+        ],
+        "floor_height": [
+          -4822.0,
+          -4822.0
+        ],
+        "forward_vel": [
+          0.0,
+          13.9682293
+        ],
+        "vx": [
+          -1.39015019,
+          6.91304302
+        ],
+        "vy": [
+          -75.0,
+          0.0
+        ],
+        "vz": [
+          0.0,
+          12.7698917
+        ],
+        "x": [
+          1384.67932,
+          1461.96985
+        ],
+        "y": [
+          -4822.0,
+          -3822.0
+        ],
+        "z": [
+          -548.0,
+          -370.189453
+        ]
+      },
+      "incident_spinner_slots": {
+        "(1102, -4233, 1682)": [
+          46
+        ],
+        "(1102, -4848, 1682)": [
+          47
+        ],
+        "(424, -4540, 1959)": [
+          48
+        ]
+      },
+      "largest_upward_step": 0.0,
+      "largest_upward_step_vi": 191,
+      "mario_rows": 191,
+      "movie": "tas20.m64",
+      "object_rows": 17144,
+      "object_slots_with_behavior_changes": {},
+      "pitch_or_roll_velocity_rows": 0,
+      "platform_contact_frames": 0,
+      "platform_slots": [],
+      "ttc_first_vi": 53,
+      "ttc_speed_settings": [
+        3
+      ]
+    },
+    {
+      "actions": [
+        "00001325",
+        "00001924",
+        "04000440",
+        "0400044A",
+        "0C400201"
+      ],
+      "gameplay_bounds": {
+        "ceil_height": [
+          -173.0,
+          20000.0
+        ],
+        "floor_height": [
+          -4822.0,
+          -4822.0
+        ],
+        "forward_vel": [
+          0.0,
+          13.9682293
+        ],
+        "vx": [
+          -1.39015019,
+          6.91304302
+        ],
+        "vy": [
+          -75.0,
+          0.0
+        ],
+        "vz": [
+          0.0,
+          13.8170443
+        ],
+        "x": [
+          1384.67932,
+          1435.89026
+        ],
+        "y": [
+          -4822.0,
+          -3822.0
+        ],
+        "z": [
+          -548.0,
+          -362.589844
+        ]
+      },
+      "incident_spinner_slots": {
+        "(1102, -4233, 1682)": [
+          46
+        ],
+        "(1102, -4848, 1682)": [
+          47
+        ],
+        "(424, -4540, 1959)": [
+          48
+        ]
+      },
+      "largest_upward_step": 0.0,
+      "largest_upward_step_vi": 191,
+      "mario_rows": 191,
+      "movie": "tas21.m64",
+      "object_rows": 17170,
+      "object_slots_with_behavior_changes": {},
+      "pitch_or_roll_velocity_rows": 0,
+      "platform_contact_frames": 0,
+      "platform_slots": [],
+      "ttc_first_vi": 53,
+      "ttc_speed_settings": [
+        3
+      ]
+    },
+    {
+      "actions": [
+        "00001325",
+        "00001924",
+        "04000440",
+        "0400044A",
+        "0C400201"
+      ],
+      "gameplay_bounds": {
+        "ceil_height": [
+          -173.0,
+          20000.0
+        ],
+        "floor_height": [
+          -4822.0,
+          -4822.0
+        ],
+        "forward_vel": [
+          0.0,
+          13.9682293
+        ],
+        "vx": [
+          -1.39015019,
+          6.91304302
+        ],
+        "vy": [
+          -75.0,
+          0.0
+        ],
+        "vz": [
+          0.0,
+          13.8683624
+        ],
+        "x": [
+          1384.67932,
+          1430.49817
+        ],
+        "y": [
+          -4822.0,
+          -3822.0
+        ],
+        "z": [
+          -548.0,
+          -361.259888
+        ]
+      },
+      "incident_spinner_slots": {
+        "(1102, -4233, 1682)": [
+          46
+        ],
+        "(1102, -4848, 1682)": [
+          47
+        ],
+        "(424, -4540, 1959)": [
+          48
+        ]
+      },
+      "largest_upward_step": 0.0,
+      "largest_upward_step_vi": 191,
+      "mario_rows": 191,
+      "movie": "tas22.m64",
+      "object_rows": 17170,
+      "object_slots_with_behavior_changes": {},
+      "pitch_or_roll_velocity_rows": 0,
+      "platform_contact_frames": 0,
+      "platform_slots": [],
+      "ttc_first_vi": 53,
+      "ttc_speed_settings": [
+        3
+      ]
+    },
+    {
+      "actions": [
+        "00001325",
+        "00001924",
+        "04000440",
+        "0400044A",
+        "0C400201"
+      ],
+      "gameplay_bounds": {
+        "ceil_height": [
+          -173.0,
+          20000.0
+        ],
+        "floor_height": [
+          -4822.0,
+          -4822.0
+        ],
+        "forward_vel": [
+          0.0,
+          13.9682293
+        ],
+        "vx": [
+          -1.39015019,
+          6.91304302
+        ],
+        "vy": [
+          -75.0,
+          0.0
+        ],
+        "vz": [
+          0.0,
+          13.8683624
+        ],
+        "x": [
+          1384.67932,
+          1430.49817
+        ],
+        "y": [
+          -4822.0,
+          -3822.0
+        ],
+        "z": [
+          -548.0,
+          -361.259888
+        ]
+      },
+      "incident_spinner_slots": {
+        "(1102, -4233, 1682)": [
+          46
+        ],
+        "(1102, -4848, 1682)": [
+          47
+        ],
+        "(424, -4540, 1959)": [
+          48
+        ]
+      },
+      "largest_upward_step": 0.0,
+      "largest_upward_step_vi": 191,
+      "mario_rows": 191,
+      "movie": "tas23.m64",
+      "object_rows": 17170,
+      "object_slots_with_behavior_changes": {},
+      "pitch_or_roll_velocity_rows": 0,
+      "platform_contact_frames": 0,
+      "platform_slots": [],
+      "ttc_first_vi": 53,
+      "ttc_speed_settings": [
+        3
+      ]
+    },
+    {
+      "actions": [
+        "00001325",
+        "00001924",
+        "04000440",
+        "0400044A",
+        "0C400201"
+      ],
+      "gameplay_bounds": {
+        "ceil_height": [
+          -173.0,
+          20000.0
+        ],
+        "floor_height": [
+          -4822.0,
+          -4822.0
+        ],
+        "forward_vel": [
+          0.0,
+          13.9682293
+        ],
+        "vx": [
+          -1.39015019,
+          6.91304302
+        ],
+        "vy": [
+          -75.0,
+          0.0
+        ],
+        "vz": [
+          0.0,
+          13.6741724
+        ],
+        "x": [
+          1384.67932,
+          1440.64807
+        ],
+        "y": [
+          -4822.0,
+          -3822.0
+        ],
+        "z": [
+          -548.0,
+          -363.209473
+        ]
+      },
+      "incident_spinner_slots": {
+        "(1102, -4233, 1682)": [
+          46
+        ],
+        "(1102, -4848, 1682)": [
+          47
+        ],
+        "(424, -4540, 1959)": [
+          48
+        ]
+      },
+      "largest_upward_step": 0.0,
+      "largest_upward_step_vi": 191,
+      "mario_rows": 191,
+      "movie": "tas24.m64",
+      "object_rows": 17144,
+      "object_slots_with_behavior_changes": {},
+      "pitch_or_roll_velocity_rows": 0,
+      "platform_contact_frames": 0,
+      "platform_slots": [],
+      "ttc_first_vi": 53,
+      "ttc_speed_settings": [
+        3
+      ]
+    },
+    {
+      "actions": [
+        "00001325",
+        "00001924",
+        "04000440",
+        "0400044A",
+        "0C400201"
+      ],
+      "gameplay_bounds": {
+        "ceil_height": [
+          -173.0,
+          20000.0
+        ],
+        "floor_height": [
+          -4822.0,
+          -4822.0
+        ],
+        "forward_vel": [
+          0.0,
+          13.9682293
+        ],
+        "vx": [
+          -1.39015019,
+          6.91304302
+        ],
+        "vy": [
+          -75.0,
+          0.0
+        ],
+        "vz": [
+          0.0,
+          13.6741724
+        ],
+        "x": [
+          1384.67932,
+          1440.64807
+        ],
+        "y": [
+          -4822.0,
+          -3822.0
+        ],
+        "z": [
+          -548.0,
+          -363.209473
+        ]
+      },
+      "incident_spinner_slots": {
+        "(1102, -4233, 1682)": [
+          46
+        ],
+        "(1102, -4848, 1682)": [
+          47
+        ],
+        "(424, -4540, 1959)": [
+          48
+        ]
+      },
+      "largest_upward_step": 0.0,
+      "largest_upward_step_vi": 191,
+      "mario_rows": 191,
+      "movie": "tas25.m64",
+      "object_rows": 17144,
+      "object_slots_with_behavior_changes": {},
+      "pitch_or_roll_velocity_rows": 0,
+      "platform_contact_frames": 0,
+      "platform_slots": [],
+      "ttc_first_vi": 53,
+      "ttc_speed_settings": [
+        3
+      ]
+    },
+    {
+      "actions": [
+        "00001325",
+        "00001924",
+        "04000440",
+        "0400044A",
+        "0C400201"
+      ],
+      "gameplay_bounds": {
+        "ceil_height": [
+          -173.0,
+          20000.0
+        ],
+        "floor_height": [
+          -4822.0,
+          -4822.0
+        ],
+        "forward_vel": [
+          0.0,
+          14.7433872
+        ],
+        "vx": [
+          -1.39015019,
+          6.91304302
+        ],
+        "vy": [
+          -75.0,
+          0.0
+        ],
+        "vz": [
+          0.0,
+          14.6584721
+        ],
+        "x": [
+          1384.67932,
+          1434.34192
+        ],
+        "y": [
+          -4822.0,
+          -3822.0
+        ],
+        "z": [
+          -548.0,
+          -344.265137
+        ]
+      },
+      "incident_spinner_slots": {
+        "(1102, -4233, 1682)": [
+          46
+        ],
+        "(1102, -4848, 1682)": [
+          47
+        ],
+        "(424, -4540, 1959)": [
+          48
+        ]
+      },
+      "largest_upward_step": 0.0,
+      "largest_upward_step_vi": 191,
+      "mario_rows": 191,
+      "movie": "tas26.m64",
+      "object_rows": 17170,
+      "object_slots_with_behavior_changes": {},
+      "pitch_or_roll_velocity_rows": 0,
+      "platform_contact_frames": 0,
+      "platform_slots": [],
+      "ttc_first_vi": 53,
+      "ttc_speed_settings": [
+        3
+      ]
+    },
+    {
+      "actions": [
+        "00001924"
+      ],
+      "gameplay_bounds": {
+        "ceil_height": [
+          5243.0,
+          20000.0
+        ],
+        "floor_height": [
+          -4822.0,
+          -4822.0
+        ],
+        "forward_vel": [
+          2.0,
+          2.0
+        ],
+        "vx": [
+          -1.39015019,
+          -1.39015019
+        ],
+        "vy": [
+          -68.0,
+          0.0
+        ],
+        "vz": [
+          1.4378742,
+          1.4378742
+        ],
+        "x": [
+          1393.36768,
+          1417.0
+        ],
+        "y": [
+          -4366.0,
+          -3822.0
+        ],
+        "z": [
+          -548.0,
+          -523.554199
+        ]
+      },
+      "incident_spinner_slots": {
+        "(1102, -4233, 1682)": [
+          46
+        ],
+        "(1102, -4848, 1682)": [
+          47
+        ],
+        "(424, -4540, 1959)": [
+          48
+        ]
+      },
+      "largest_upward_step": 0.0,
+      "largest_upward_step_vi": 99,
+      "mario_rows": 99,
+      "movie": "tas3.m64",
+      "object_rows": 5868,
+      "object_slots_with_behavior_changes": {},
+      "pitch_or_roll_velocity_rows": 0,
+      "platform_contact_frames": 0,
+      "platform_slots": [],
+      "ttc_first_vi": 53,
+      "ttc_speed_settings": [
+        3
+      ]
+    },
+    {
+      "actions": [
+        "00001325",
+        "00001924",
+        "0C400201"
+      ],
+      "gameplay_bounds": {
+        "ceil_height": [
+          5243.0,
+          20000.0
+        ],
+        "floor_height": [
+          -4822.0,
+          -4822.0
+        ],
+        "forward_vel": [
+          0.0,
+          2.0
+        ],
+        "vx": [
+          -1.39015019,
+          -0.0
+        ],
+        "vy": [
+          -75.0,
+          0.0
+        ],
+        "vz": [
+          0.0,
+          1.4378742
+        ],
+        "x": [
+          1384.67932,
+          1417.0
+        ],
+        "y": [
+          -4822.0,
+          -3822.0
+        ],
+        "z": [
+          -548.0,
+          -514.566772
+        ]
+      },
+      "incident_spinner_slots": {
+        "(1102, -4233, 1682)": [
+          46
+        ],
+        "(1102, -4848, 1682)": [
+          47
+        ],
+        "(424, -4540, 1959)": [
+          48
+        ]
+      },
+      "largest_upward_step": 0.0,
+      "largest_upward_step_vi": 191,
+      "mario_rows": 191,
+      "movie": "tas4.m64",
+      "object_rows": 17092,
+      "object_slots_with_behavior_changes": {},
+      "pitch_or_roll_velocity_rows": 0,
+      "platform_contact_frames": 0,
+      "platform_slots": [],
+      "ttc_first_vi": 53,
+      "ttc_speed_settings": [
+        3
+      ]
+    },
+    {
+      "actions": [
+        "00001325",
+        "00001924",
+        "0C400201"
+      ],
+      "gameplay_bounds": {
+        "ceil_height": [
+          5243.0,
+          20000.0
+        ],
+        "floor_height": [
+          -4822.0,
+          -4822.0
+        ],
+        "forward_vel": [
+          0.0,
+          2.0
+        ],
+        "vx": [
+          -1.39015019,
+          -0.0
+        ],
+        "vy": [
+          -75.0,
+          0.0
+        ],
+        "vz": [
+          0.0,
+          1.4378742
+        ],
+        "x": [
+          1384.67932,
+          1417.0
+        ],
+        "y": [
+          -4822.0,
+          -3822.0
+        ],
+        "z": [
+          -548.0,
+          -514.566772
+        ]
+      },
+      "incident_spinner_slots": {
+        "(1102, -4233, 1682)": [
+          46
+        ],
+        "(1102, -4848, 1682)": [
+          47
+        ],
+        "(424, -4540, 1959)": [
+          48
+        ]
+      },
+      "largest_upward_step": 0.0,
+      "largest_upward_step_vi": 191,
+      "mario_rows": 191,
+      "movie": "tas5.m64",
+      "object_rows": 17092,
+      "object_slots_with_behavior_changes": {},
+      "pitch_or_roll_velocity_rows": 0,
+      "platform_contact_frames": 0,
+      "platform_slots": [],
+      "ttc_first_vi": 53,
+      "ttc_speed_settings": [
+        3
+      ]
+    },
+    {
+      "actions": [
+        "00001325",
+        "00001924",
+        "0C400201"
+      ],
+      "gameplay_bounds": {
+        "ceil_height": [
+          5243.0,
+          20000.0
+        ],
+        "floor_height": [
+          -4822.0,
+          -4822.0
+        ],
+        "forward_vel": [
+          0.0,
+          2.0
+        ],
+        "vx": [
+          -1.39015019,
+          -0.0
+        ],
+        "vy": [
+          -75.0,
+          0.0
+        ],
+        "vz": [
+          0.0,
+          1.4378742
+        ],
+        "x": [
+          1384.67932,
+          1417.0
+        ],
+        "y": [
+          -4822.0,
+          -3822.0
+        ],
+        "z": [
+          -548.0,
+          -514.566772
+        ]
+      },
+      "incident_spinner_slots": {
+        "(1102, -4233, 1682)": [
+          46
+        ],
+        "(1102, -4848, 1682)": [
+          47
+        ],
+        "(424, -4540, 1959)": [
+          48
+        ]
+      },
+      "largest_upward_step": 0.0,
+      "largest_upward_step_vi": 191,
+      "mario_rows": 191,
+      "movie": "tas6.m64",
+      "object_rows": 17092,
+      "object_slots_with_behavior_changes": {},
+      "pitch_or_roll_velocity_rows": 0,
+      "platform_contact_frames": 0,
+      "platform_slots": [],
+      "ttc_first_vi": 53,
+      "ttc_speed_settings": [
+        3
+      ]
+    },
+    {
+      "actions": [
+        "00001325",
+        "00001924",
+        "0C400201"
+      ],
+      "gameplay_bounds": {
+        "ceil_height": [
+          5243.0,
+          20000.0
+        ],
+        "floor_height": [
+          -4822.0,
+          -4822.0
+        ],
+        "forward_vel": [
+          0.0,
+          2.0
+        ],
+        "vx": [
+          -1.39015019,
+          -0.0
+        ],
+        "vy": [
+          -75.0,
+          0.0
+        ],
+        "vz": [
+          0.0,
+          1.4378742
+        ],
+        "x": [
+          1384.67932,
+          1417.0
+        ],
+        "y": [
+          -4822.0,
+          -3822.0
+        ],
+        "z": [
+          -548.0,
+          -514.566772
+        ]
+      },
+      "incident_spinner_slots": {
+        "(1102, -4233, 1682)": [
+          46
+        ],
+        "(1102, -4848, 1682)": [
+          47
+        ],
+        "(424, -4540, 1959)": [
+          48
+        ]
+      },
+      "largest_upward_step": 0.0,
+      "largest_upward_step_vi": 191,
+      "mario_rows": 191,
+      "movie": "tas7.m64",
+      "object_rows": 17092,
+      "object_slots_with_behavior_changes": {},
+      "pitch_or_roll_velocity_rows": 0,
+      "platform_contact_frames": 0,
+      "platform_slots": [],
+      "ttc_first_vi": 53,
+      "ttc_speed_settings": [
+        3
+      ]
+    },
+    {
+      "actions": [
+        "00001325",
+        "00001924",
+        "0C400201"
+      ],
+      "gameplay_bounds": {
+        "ceil_height": [
+          5243.0,
+          20000.0
+        ],
+        "floor_height": [
+          -4822.0,
+          -4822.0
+        ],
+        "forward_vel": [
+          0.0,
+          2.0
+        ],
+        "vx": [
+          -1.39015019,
+          -0.0
+        ],
+        "vy": [
+          -75.0,
+          0.0
+        ],
+        "vz": [
+          0.0,
+          1.4378742
+        ],
+        "x": [
+          1384.67932,
+          1417.0
+        ],
+        "y": [
+          -4822.0,
+          -3822.0
+        ],
+        "z": [
+          -548.0,
+          -514.566772
+        ]
+      },
+      "incident_spinner_slots": {
+        "(1102, -4233, 1682)": [
+          46
+        ],
+        "(1102, -4848, 1682)": [
+          47
+        ],
+        "(424, -4540, 1959)": [
+          48
+        ]
+      },
+      "largest_upward_step": 0.0,
+      "largest_upward_step_vi": 191,
+      "mario_rows": 191,
+      "movie": "tas8.m64",
+      "object_rows": 17092,
+      "object_slots_with_behavior_changes": {},
+      "pitch_or_roll_velocity_rows": 0,
+      "platform_contact_frames": 0,
+      "platform_slots": [],
+      "ttc_first_vi": 53,
+      "ttc_speed_settings": [
+        3
+      ]
+    },
+    {
+      "actions": [
+        "00001325",
+        "00001924",
+        "0C400201"
+      ],
+      "gameplay_bounds": {
+        "ceil_height": [
+          5243.0,
+          20000.0
+        ],
+        "floor_height": [
+          -4822.0,
+          -4822.0
+        ],
+        "forward_vel": [
+          0.0,
+          2.0
+        ],
+        "vx": [
+          -1.39015019,
+          -0.0
+        ],
+        "vy": [
+          -75.0,
+          0.0
+        ],
+        "vz": [
+          0.0,
+          1.4378742
+        ],
+        "x": [
+          1384.67932,
+          1417.0
+        ],
+        "y": [
+          -4822.0,
+          -3822.0
+        ],
+        "z": [
+          -548.0,
+          -514.566772
+        ]
+      },
+      "incident_spinner_slots": {
+        "(1102, -4233, 1682)": [
+          46
+        ],
+        "(1102, -4848, 1682)": [
+          47
+        ],
+        "(424, -4540, 1959)": [
+          48
+        ]
+      },
+      "largest_upward_step": 0.0,
+      "largest_upward_step_vi": 191,
+      "mario_rows": 191,
+      "movie": "tas9.m64",
+      "object_rows": 17092,
+      "object_slots_with_behavior_changes": {},
+      "pitch_or_roll_velocity_rows": 0,
+      "platform_contact_frames": 0,
+      "platform_slots": [],
+      "ttc_first_vi": 53,
+      "ttc_speed_settings": [
+        3
+      ]
+    }
+  ],
+  "movies_with_platform_contact": 0,
+  "movies_with_slot_behavior_change": 0,
+  "pitch_or_roll_velocity_rows": 0,
+  "total_mario_rows": 4860,
+  "total_object_rows": 418304,
+  "trace_files": 27
+}

@@ -1,0 +1,1 @@
+FUZZ_DONE seed=1010 speed_mode=2 horizon=1 reset_mode=0 trials=25000000 valid_trials=22173253 simulated_frames=22173253 candidates=0 largest_delta=238.162109 largest_trial=1646908 largest_step=0 seconds=368.383134400 trials_per_second=67864.127 frames_per_second=60190.739

@@ -1,0 +1,32 @@
+SELFTEST_FRAME step=0 timer=3 y=-1071.75 vy=-24 floor=-2487 ceil=-173 action=0100088C
+FUZZ_CANDIDATE seed=1 trial=0 step=0 timer=3 speed=3 action=0100088C x=800 y=-4207 z=1900 vx=0 vy=-20 vz=0 forward_vel=0 face_yaw=25885 button=0000 stick_x=0 stick_y=0 floor=-5211 ceil=-2641 after_y=-1071.75 delta_y=3135.25 after_action=0100088C
+SELFTEST_FRAME step=1 timer=4 y=-1095.75 vy=-28 floor=-2487 ceil=-173 action=0100088C
+SELFTEST_FRAME step=2 timer=5 y=-1123.75 vy=-32 floor=-2487 ceil=-173 action=0100088C
+SELFTEST_FRAME step=3 timer=6 y=-1155.75 vy=-36 floor=-2487 ceil=-173 action=0100088C
+SELFTEST_FRAME step=4 timer=7 y=-1191.75 vy=-40 floor=-2487 ceil=-173 action=0100088C
+SELFTEST_FRAME step=5 timer=8 y=-1231.75 vy=-44 floor=-2487 ceil=-173 action=0100088C
+SELFTEST_FRAME step=6 timer=9 y=-1275.75 vy=-48 floor=-2487 ceil=-173 action=0100088C
+SELFTEST_FRAME step=7 timer=10 y=-1323.75 vy=-52 floor=-2487 ceil=-173 action=0100088C
+SELFTEST_FRAME step=8 timer=11 y=-1375.75 vy=-56 floor=-2487 ceil=-173 action=0100088C
+SELFTEST_FRAME step=9 timer=12 y=-1431.75 vy=-60 floor=-2487 ceil=-173 action=0100088C
+SELFTEST_FRAME step=10 timer=13 y=-1491.75 vy=-64 floor=-2487 ceil=-173 action=0100088C
+SELFTEST_FRAME step=11 timer=14 y=-1555.75 vy=-68 floor=-2487 ceil=-173 action=0100088C
+SELFTEST_FRAME step=12 timer=15 y=-1623.75 vy=-72 floor=-2487 ceil=-173 action=0100088C
+SELFTEST_FRAME step=13 timer=16 y=-1695.75 vy=-75 floor=-2487 ceil=-173 action=0100088C
+SELFTEST_FRAME step=14 timer=17 y=-1770.75 vy=-75 floor=-2487 ceil=-173 action=0100088C
+SELFTEST_FRAME step=15 timer=18 y=-1845.75 vy=-75 floor=-2487 ceil=-173 action=0100088C
+SELFTEST_FRAME step=16 timer=19 y=-1920.75 vy=-75 floor=-2487 ceil=-173 action=0100088C
+SELFTEST_FRAME step=17 timer=20 y=-1995.75 vy=-75 floor=-2487 ceil=-173 action=0100088C
+SELFTEST_FRAME step=18 timer=21 y=-2070.75 vy=-75 floor=-2487 ceil=-173 action=0100088C
+SELFTEST_FRAME step=19 timer=22 y=-2145.75 vy=-75 floor=-2487 ceil=-173 action=0100088C
+SELFTEST_FRAME step=20 timer=23 y=-2220.75 vy=-75 floor=-2487 ceil=-173 action=0100088C
+SELFTEST_FRAME step=21 timer=24 y=-2295.75 vy=-75 floor=-2487 ceil=-173 action=0100088C
+SELFTEST_FRAME step=22 timer=25 y=-2370.75 vy=-75 floor=-2487 ceil=-173 action=0100088C
+SELFTEST_FRAME step=23 timer=26 y=-2445.75 vy=-75 floor=-2487 ceil=-173 action=0100088C
+SELFTEST_FRAME step=24 timer=27 y=-2487 vy=-75 floor=-2487 ceil=-173 action=04000471
+SELFTEST_FRAME step=25 timer=28 y=-2487 vy=0 floor=-2487 ceil=-173 action=04000471
+SELFTEST_FRAME step=26 timer=29 y=-2487 vy=0 floor=-2487 ceil=-173 action=04000471
+SELFTEST_FRAME step=27 timer=30 y=-2487 vy=0 floor=-2487 ceil=-173 action=04000471
+SELFTEST_FRAME step=28 timer=31 y=-2487 vy=0 floor=-2487 ceil=-173 action=0C000232
+SELFTEST_FRAME step=29 timer=32 y=-2487 vy=0 floor=-2487 ceil=-173 action=0C000232
+FUZZ_DONE seed=1 speed_mode=3 horizon=30 reset_mode=0 profile=4 trials=1 valid_trials=1 simulated_frames=30 candidates=1 largest_delta=3135.25 largest_trial=0 largest_step=0 seconds=0.000391400 trials_per_second=2554.931 frames_per_second=76647.931

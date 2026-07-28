@@ -1,0 +1,90 @@
+{
+  "aggregate_frames_per_second": 76647.931,
+  "aggregate_trials_per_second": 2554.931,
+  "by_speed_mode": {
+    "3": {
+      "candidate_count": 1,
+      "largest_delta": 3135.25,
+      "largest_delta_run": "seed_1_speed_3.log",
+      "runs": 1,
+      "simulated_frames": 30,
+      "trials": 1,
+      "valid_trials": 1
+    }
+  },
+  "candidate_count": 1,
+  "candidates": [
+    {
+      "action": "0100088C",
+      "after_action": "0100088C",
+      "after_y": "-1071.75",
+      "button": "0000",
+      "ceil": "-2641",
+      "delta_y": "3135.25",
+      "face_yaw": "25885",
+      "floor": "-5211",
+      "forward_vel": "0",
+      "log": "seed_1_speed_3.log",
+      "seed": "1",
+      "speed": "3",
+      "step": "0",
+      "stick_x": "0",
+      "stick_y": "0",
+      "timer": "3",
+      "trial": "0",
+      "vx": "0",
+      "vy": "-20",
+      "vz": "0",
+      "x": "800",
+      "y": "-4207",
+      "z": "1900"
+    }
+  ],
+  "completed_runs": 1,
+  "directory": "/home/zman/projects/labs/ttc_upwarp/results/wafel_fuzz/bitflip_selftest",
+  "incomplete_logs": [],
+  "largest_delta": 3135.25,
+  "largest_delta_run": {
+    "candidates": 1,
+    "frames_per_second": 76647.931,
+    "horizon": 30,
+    "largest_delta": 3135.25,
+    "largest_step": 0,
+    "largest_trial": 0,
+    "log": "seed_1_speed_3.log",
+    "profile": 4,
+    "reset_mode": 0,
+    "seconds": 0.0003914,
+    "seed": 1,
+    "simulated_frames": 30,
+    "speed_mode": 3,
+    "trials": 1,
+    "trials_per_second": 2554.931,
+    "valid_trials": 1
+  },
+  "log_count": 1,
+  "reported_candidate_count": 1,
+  "runs": [
+    {
+      "candidates": 1,
+      "frames_per_second": 76647.931,
+      "horizon": 30,
+      "largest_delta": 3135.25,
+      "largest_step": 0,
+      "largest_trial": 0,
+      "log": "seed_1_speed_3.log",
+      "profile": 4,
+      "reset_mode": 0,
+      "seconds": 0.0003914,
+      "seed": 1,
+      "simulated_frames": 30,
+      "speed_mode": 3,
+      "trials": 1,
+      "trials_per_second": 2554.931,
+      "valid_trials": 1
+    }
+  ],
+  "total_simulated_frames": 30,
+  "total_trials": 1,
+  "total_valid_trials": 1
+}

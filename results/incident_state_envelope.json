@@ -1,0 +1,84 @@
+{
+  "incident": {
+    "video": "DOTA_TeaBag full race VOD TTh3LY-5KKg",
+    "video_entry_interval_seconds": [3467.0, 3468.0],
+    "video_upwarp_interval_seconds": [3481.40, 3481.47],
+    "capture_rate": "30000/1001",
+    "course": "Tick Tock Clock",
+    "mission": "Stomp on the Thwomp",
+    "observed_coin_count_near_event": 4
+  },
+  "hard_constraints": {
+    "pre_event_mario_y": -4207.0,
+    "post_event_mario_y_if_ieee754_bit_24_clears": -1051.75,
+    "instantaneous_y_delta": 3155.25,
+    "pre_event_y_word": "0xC5837800",
+    "post_event_y_word": "0xC4837800",
+    "changed_bit": 24,
+    "changed_byte": "C5 -> C4",
+    "ttc_speed_setting": 3,
+    "ttc_speed_name": "TTC_SPEED_STOPPED",
+    "incident_spinner_center": [1102.0, -4233.0, 1682.0],
+    "incident_spinner_macro_yaw_degrees": 135,
+    "incident_spinner_face_pitch": 0,
+    "incident_spinner_angle_vel_pitch": 0,
+    "incident_spinner_top_y": -4207.0,
+    "incident_spinner_collision_local_bounds": {
+      "x": [-153, 154],
+      "top_y": 26,
+      "z": [-306, 307]
+    }
+  },
+  "constraint_derivation": {
+    "speed_setting": "At clock entry the hand is within the stopped interval around 12; every supplied reconstruction TAS also enters with gTTCSpeedSetting=3.",
+    "spinner_identity": "The published -4207.0 pre-event Y is exactly -4233 + 26, the top plane of the spinner centered at (1102,-4233,1682). The video shows Mario at this spinner.",
+    "location": "The incident occurs at the spinner end beside the red coin centered at (800,-4400,1900). Exact X/Z are unavailable because no original controller movie or RAM capture exists.",
+    "action": "The 29.97 fps VOD shows a landing followed by an airborne state before the transition. Stream frame loss prevents one exact game-frame action assignment."
+  },
+  "bounded_search_envelope": {
+    "mario_x": [700.0, 1250.0],
+    "mario_y": [-4275.0, -4100.0],
+    "mario_z": [1450.0, 2150.0],
+    "preferred_xz_neighborhoods": [
+      [800.0, 1900.0],
+      [850.0, 1850.0]
+    ],
+    "vertical_velocity": [-75.0, 30.0],
+    "forward_velocity": [0.0, 64.0],
+    "face_yaw": [0, 65535],
+    "actions": [
+      "ACT_JUMP",
+      "ACT_FREEFALL",
+      "ACT_DIVE",
+      "ACT_DIVE_SLIDE",
+      "ACT_JUMP_KICK",
+      "ACT_AIR_HIT_WALL",
+      "ACT_SOFT_BONK",
+      "ACT_BACKWARD_AIR_KB",
+      "ACT_FORWARD_AIR_KB"
+    ],
+    "spinner_phase": [0, 0],
+    "ttc_speed_settings": [3],
+    "platform_pointer_cases": [
+      "NULL",
+      "incident spinner slot 46",
+      "every active object slot for stale-pointer testing"
+    ]
+  },
+  "supplied_tas_corpus": {
+    "movies": 27,
+    "trace_files": 27,
+    "mario_rows": 4860,
+    "object_rows": 418304,
+    "movies_reaching_ttc": 26,
+    "ttc_speed_settings": [3],
+    "platform_contact_frames": 0,
+    "assessment": "The movies are short variants from one pre-TTC savestate. They stop around the entrance floor near (1400,-4822,-520), never approach the incident spinner, and do not constrain incident X/Z, velocity, action, input, or platform-pointer state."
+  },
+  "evidence_limitations": [
+    "No original .m64 exists.",
+    "No original savestate or RAM capture exists.",
+    "The legacy Google Drive package linked by the bounty is access-denied and could not be recovered from public archives.",
+    "The VOD is a lossy, composited 29.97 fps race stream and can omit N64 frames."
+  ]
+}

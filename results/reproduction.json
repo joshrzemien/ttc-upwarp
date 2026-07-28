@@ -1,0 +1,78 @@
+{
+  "control_first_physics_step": {
+    "action": "0100088C",
+    "ceil": -2641.0,
+    "event": "tick",
+    "floor": -5211.0,
+    "vi": 102,
+    "vy": -24.0,
+    "x": 800.0,
+    "y": -4227.0,
+    "y_word": "C5841800",
+    "z": 1900.0
+  },
+  "control_landing": {
+    "action": "04000471",
+    "ceil": -2641.0,
+    "event": "tick",
+    "floor": -5211.0,
+    "vi": 138,
+    "vy": -75.0,
+    "x": 800.0,
+    "y": -5211.0,
+    "y_word": "C5A2D800",
+    "z": 1900.0
+  },
+  "flipped": {
+    "action": "0100088C",
+    "ceil": 5243.0,
+    "event": "clear_bit_24",
+    "floor": -4822.0,
+    "vi": 101,
+    "vy": -20.0,
+    "x": 800.0,
+    "y": -1051.75,
+    "y_word": "C4837800",
+    "z": 1900.0
+  },
+  "injected_first_physics_step": {
+    "action": "0100088C",
+    "ceil": -173.0,
+    "event": "tick",
+    "floor": -2487.0,
+    "vi": 102,
+    "vy": -24.0,
+    "x": 800.0,
+    "y": -1071.75,
+    "y_word": "C485F800",
+    "z": 1900.0
+  },
+  "injected_landing": {
+    "action": "04000471",
+    "ceil": -173.0,
+    "event": "tick",
+    "floor": -2487.0,
+    "vi": 150,
+    "vy": -75.0,
+    "x": 800.0,
+    "y": -2487.0,
+    "y_word": "C51B7000",
+    "z": 1900.0
+  },
+  "instantaneous_y_delta": 3155.25,
+  "rom_md5": "85d61f5525af708c9f1e84dce6dc10e9",
+  "source": {
+    "action": "0100088C",
+    "ceil": 5243.0,
+    "event": "place_C5837800",
+    "floor": -4822.0,
+    "vi": 100,
+    "vy": -20.0,
+    "x": 800.0,
+    "y": -4207.0,
+    "y_word": "C5837800",
+    "z": 1900.0
+  },
+  "status": "pass",
+  "vis_from_flip_to_upper_landing": 49
+}

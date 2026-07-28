@@ -1,0 +1,92 @@
+{
+  "source_revision": "9921382a68bb0c865e5e45eb594d9c64db59b1af",
+  "rom_md5": "85d61f5525af708c9f1e84dce6dc10e9",
+  "target_transition": {
+    "pre_y": -4207.0,
+    "post_y": -1051.75,
+    "instantaneous_delta_y": 3155.25,
+    "pre_word": "0xC5837800",
+    "post_word": "0xC4837800",
+    "xor": "0x01000000",
+    "action": "ACT_FREEFALL (0x0100088C)",
+    "vertical_velocity": -20.0,
+    "ttc_speed": "TTC_SPEED_STOPPED"
+  },
+  "writer_families": [
+    {
+      "family": "ordinary airborne integration and floor collision",
+      "sources": [
+        "sm64/src/game/mario_actions_airborne.c:371-443",
+        "sm64/src/game/mario_actions_airborne.c:525-549",
+        "sm64/src/game/mario_step.c:388-482"
+      ],
+      "incident_result": "ACT_FREEFALL calls perform_air_step with AIR_STEP_CHECK_LEDGE_GRAB only. It does not enable AIR_STEP_CHECK_HANG. Ordinary integration moves downward from vy=-20; floor assignments use a queried or retained floor, not an unrelated upper coordinate."
+    },
+    {
+      "family": "ledge grab",
+      "sources": [
+        "sm64/src/game/mario_step.c:348-385"
+      ],
+      "incident_result": "The ledge floor query is capped by next_y + 160, so it cannot produce a 3155.25-unit rise."
+    },
+    {
+      "family": "ceiling hang upwarp",
+      "sources": [
+        "sm64/src/game/mario_step.c:446-454",
+        "sm64/src/game/mario_actions_automatic.c:375-413"
+      ],
+      "incident_result": "The snap to ceilHeight-160 requires AIR_STEP_CHECK_HANG, upward ceiling contact, ACT_START_HANGING, A held, and a referenced hangable ceiling. ACT_FREEFALL omits the hang check; the reconstructed state is descending and its ceiling is far above."
+    },
+    {
+      "family": "ground-pound startup",
+      "sources": [
+        "sm64/src/game/mario_actions_airborne.c:918-947"
+      ],
+      "incident_result": "The only direct upward adjustment is 20-2*actionTimer, at most 20 units."
+    },
+    {
+      "family": "moving-platform displacement",
+      "sources": [
+        "sm64/src/game/platform_displacement.c:107-160",
+        "sm64/src/game/behaviors/ttc_spinner.inc.c:9-36"
+      ],
+      "incident_result": "Platform oVelY is never applied. Mario's Y changes only in the angular-rotation branch. The incident spinner has zero angular velocity under TTC_SPEED_STOPPED, so its vertical platform displacement is exactly zero."
+    },
+    {
+      "family": "retained or stale platform pointer",
+      "sources": [
+        "results/platform_reachability.json",
+        "results/platform_sweep_summary.json"
+      ],
+      "incident_result": "The only reachable retained pointers in the incident grid are NULL and persistent spinner slot 46. The spinner does not unload or reuse its slot. All 65,536 counterfactual fast-spinner phases remained below 21.377 units; the stopped incident spinner produces zero."
+    },
+    {
+      "family": "object interaction, pole, cannon, whirlpool, and attachment snaps",
+      "sources": [
+        "sm64/src/game/interaction.c:515-523",
+        "sm64/src/game/mario_actions_automatic.c:69-95",
+        "sm64/src/game/mario_actions_automatic.c:680-739",
+        "sm64/src/game/mario_actions_submerged.c:1075-1089"
+      ],
+      "incident_result": "These paths require a matching interaction or automatic/submerged action and a valid used-object pointer. None matches the observed freefall state or nearby red-coin/spinner objects; bounded multi-action searches cover the counterfactual states."
+    },
+    {
+      "family": "warp, spawn, cutscene, and area initialization",
+      "sources": [
+        "sm64/src/game/mario.c:1788-1863",
+        "sm64/src/game/area.c:260-280",
+        "sm64/src/game/level_update.c:1219-1270"
+      ],
+      "incident_result": "These relocate Mario only with a level/area or cutscene transition, which is absent from the continuous incident footage and action state."
+    },
+    {
+      "family": "raw coordinate corruption",
+      "sources": [
+        "fuzzy64-mario-y-trace.patch",
+        "results/reproduction.json"
+      ],
+      "incident_result": "Clearing bit 24 of the 32-bit IEEE-754 Y word produces y/4 exactly and reproduces the upper floor and landing trajectory. No byte or halfword writer to Mario Y appeared in native traced execution."
+    }
+  ],
+  "bounded_conclusion": "No enumerated legal writer family can produce the observed 3155.25-unit transition from the reconstructed incident state. A corrupted 32-bit coordinate value remains the only tested mechanism that reproduces the numeric transition and subsequent trajectory."
+}

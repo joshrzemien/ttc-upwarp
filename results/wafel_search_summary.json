@@ -1,0 +1,109 @@
+{
+  "engine": {
+    "name": "Wafel libsm64 direct-frame harness",
+    "wafel_revision": "5b808b60af15d316a5e2b0f87db34421d6225b57",
+    "game": "Super Mario 64 (Japan)",
+    "rom_md5": "85d61f5525af708c9f1e84dce6dc10e9",
+    "implementation": "scripts/wafel_incident_fuzz.c",
+    "execution": "Direct C ABI calls to sm64_update in Wafel's unlocked sm64_jp.dll under Wine on roach",
+    "aggregate_broad_rate_frames_per_second": 991057.09
+  },
+  "detector": {
+    "candidate_condition": "one-frame delta_y >= 500",
+    "incident_instantaneous_delta_y": 3155.25,
+    "reason_for_threshold": "The threshold is less than one sixth of the reconstructed incident displacement and above every bounded legal-path result."
+  },
+  "differential_self_test": {
+    "mutation": "clear 0x01000000 in Mario Y: 0xC5837800 -> 0xC4837800",
+    "native_first_physics_step": {
+      "y": -1071.75,
+      "vy": -24.0,
+      "floor": -2487.0,
+      "ceil": -173.0,
+      "action": "0x0100088C"
+    },
+    "n64_emulator_first_physics_step": {
+      "y": -1071.75,
+      "vy": -24.0,
+      "floor": -2487.0,
+      "ceil": -173.0,
+      "action": "0x0100088C"
+    },
+    "native_landing_step": 24,
+    "n64_emulator_landing_vi": 150,
+    "n64_emulator_first_physics_vi": 102,
+    "timing_relation": "The N64 executes this game update every two VIs: (150-102)/2 = 24 native steps.",
+    "detected_delta_after_first_physics_step": 3135.25,
+    "candidate_detected": true,
+    "sources": [
+      "results/reproduction.json",
+      "results/wafel_fuzz/bitflip_selftest/seed_1_speed_3.log"
+    ]
+  },
+  "clean_campaigns": [
+    {
+      "name": "single_frame_400m",
+      "profile": "Broad randomized one-frame states plus a 25% exact reconstruction arm; all four TTC speed modes",
+      "attempted_initializations": 400000000,
+      "valid_initializations": 354633684,
+      "simulated_frames": 354633684,
+      "stopped_clock_frames": 88556949,
+      "candidates": 0,
+      "largest_delta_all_speeds": 426.764404,
+      "largest_delta_stopped_clock": 139.429199,
+      "summary": "results/wafel_fuzz/single_frame_400m_summary.json"
+    },
+    {
+      "name": "exact_reconstruction_stopped_100m",
+      "profile": "x=800, y=-4207, z=1900, vy=-20, ACT_FREEFALL, TTC_SPEED_STOPPED; randomized yaw/input and evolving legal world state",
+      "attempted_initializations": 100000000,
+      "valid_initializations": 100000000,
+      "simulated_frames": 100000000,
+      "stopped_clock_frames": 100000000,
+      "candidates": 0,
+      "largest_delta": 20.0,
+      "summary": "results/wafel_fuzz/exact_reconstruction_stopped_100m_summary.json"
+    },
+    {
+      "name": "grid_reconstruction_stopped_6m",
+      "profile": "Every integer X/Z point in x=700..1250, z=1450..2150 at y=-4207, vy=-20 and ACT_FREEFALL; 16 independent passes at TTC_SPEED_STOPPED",
+      "grid_points_per_pass": 386251,
+      "passes": 16,
+      "attempted_initializations": 6180016,
+      "valid_initializations": 5931089,
+      "simulated_frames": 5931089,
+      "stopped_clock_frames": 5931089,
+      "candidates": 0,
+      "largest_delta": 25.0004883,
+      "summary": "results/wafel_fuzz/grid_reconstruction_stopped_6m_summary.json"
+    },
+    {
+      "name": "envelope16_short_1_6m",
+      "profile": "Sixteen-frame episodes over the reconstructed x/y/z and velocity bounds, 17 relevant action states, randomized controller inputs, TTC_SPEED_STOPPED",
+      "attempted_initializations": 1600000,
+      "valid_initializations": 1472346,
+      "simulated_frames": 23557536,
+      "stopped_clock_frames": 23557536,
+      "candidates": 0,
+      "largest_delta": 136.40625,
+      "summary": "results/wafel_fuzz/envelope16_short_1_6m_summary.json"
+    }
+  ],
+  "aggregate_clean_coverage": {
+    "attempted_initializations": 507780016,
+    "valid_initializations": 462037119,
+    "simulated_frames": 484122309,
+    "stopped_clock_frames": 218045574,
+    "candidate_count": 0,
+    "largest_delta_all_speeds": 426.764404,
+    "largest_delta_stopped_clock": 139.429199,
+    "incident_delta_divided_by_largest_stopped_result": 22.630,
+    "claim": "No tested legal state produced a one-frame rise of 500 units, versus the reconstructed 3155.25-unit incident displacement."
+  },
+  "scope_limits": [
+    "Random campaigns are bounded searches, not an exhaustive proof over every 32-bit game state.",
+    "The integer X/Z grid is exhaustive only over its stated envelope, Y, velocity, action, and resolution.",
+    "The native engine is not the original MIPS binary; its incident trajectory was therefore differentially checked against the instrumented N64 emulator, and source-level bounds are used for the decisive freefall/platform exclusions.",
+    "No original input movie, savestate, RAM dump, or console hardware survives, so the physical initiator cannot be identified."
+  ]
+}

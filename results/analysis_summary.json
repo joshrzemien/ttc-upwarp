@@ -1,0 +1,146 @@
+{
+  "scope": {
+    "incident": "DOTA_Teabag Tick Tock Clock upwarp",
+    "question_resolved": "What state transition produced the observed teleport, and is there evidence for a deterministic game-code path?",
+    "question_not_identifiable_from_available_evidence": "Which physical initiator, if any, caused the state transition on the original console?"
+  },
+  "rom_and_model": {
+    "game": "Super Mario 64 (Japan)",
+    "rom_byte_order": "z64",
+    "rom_md5": "85d61f5525af708c9f1e84dce6dc10e9",
+    "decomp_build_byte_identical_to_test_rom": true,
+    "mario_state_virtual_address": "0x80339E00",
+    "mario_y_virtual_address": "0x80339E40",
+    "mario_y_physical_address": "0x00339E40"
+  },
+  "coordinate_transition": {
+    "published_pre_event_y": -4207.0,
+    "pre_event_ieee754_word": "0xC5837800",
+    "reconstructed_post_event_y": -1051.75,
+    "post_event_ieee754_word": "0xC4837800",
+    "word_xor": "0x01000000",
+    "changed_bit": 24,
+    "ieee754_biased_exponent_before": 139,
+    "ieee754_biased_exponent_after": 137,
+    "instantaneous_y_delta": 3155.25,
+    "exact_relation": "post_event_y = pre_event_y / 4"
+  },
+  "emulator_reproduction": {
+    "reproduction_site": {
+      "x": 800.0,
+      "z": 1900.0,
+      "reason": "the vertical TTC red-coin column adjacent to the incident spinner"
+    },
+    "source_vi": 100,
+    "bit_clear_vi": 101,
+    "source_action": "ACT_FREEFALL (0x0100088C)",
+    "injected_result": {
+      "first_recomputed_floor": -2487.0,
+      "ceiling": -173.0,
+      "landing_vi": 150,
+      "landing_y": -2487.0,
+      "landing_action": "ACT_FREEFALL_LAND (0x04000471)",
+      "vis_from_bit_clear_to_landing": 49,
+      "seconds_at_60_vi_per_second": 0.8166666667
+    },
+    "no_flip_control": {
+      "first_recomputed_floor": -5211.0,
+      "ceiling": -2641.0,
+      "landing_vi": 138,
+      "landing_y": -5211.0,
+      "landing_action": "ACT_FREEFALL_LAND (0x04000471)"
+    }
+  },
+  "software_path_checks": {
+    "legacy_n64_emulator_search": {
+      "supplied_tas_movies_replayed": 27,
+      "supplied_tas_largest_upward_step": 0.0,
+      "randomized_trials": 29008,
+      "randomized_vis": 695800,
+      "threshold_hits": 0,
+      "largest_upward_step": 88.0
+    },
+    "matched_source_audit": {
+      "integer_or_byte_decrement_of_mario_y_found": false,
+      "sole_direct_mario_y_decrement": "m->pos[1] -= 100.0f in let_go_of_ledge; this is floating-point and moves downward",
+      "native_writer_sites_observed": [
+        "vec3s_to_vec3f",
+        "vec3f_copy",
+        "f32_find_wall_collision"
+      ],
+      "native_writer_widths_observed": [
+        "32-bit swc1"
+      ],
+      "byte_or_halfword_writer_observed": false
+    },
+    "freefall_path_bound": {
+      "source_action": "ACT_FREEFALL (0x0100088C)",
+      "hang_check_enabled": false,
+      "ledge_query_maximum_above_next_y": 160.0,
+      "ground_pound_startup_maximum_upward_adjustment": 20.0,
+      "incident_delta": 3155.25,
+      "source": "results/software_mechanism_bounds.json"
+    },
+    "platform_mechanism": {
+      "incident_spinner_slot": 46,
+      "incident_spinner_vertical_displacement": 0.0,
+      "reason": "TTC_SPEED_STOPPED gives the spinner zero angular velocity, and platform displacement does not apply oVelY",
+      "stale_slot_reuse_reachable": false,
+      "counterfactual_fast_spinner_phases": 65536,
+      "counterfactual_maximum_delta_y": 21.3769531,
+      "source": "results/platform_reachability.json"
+    },
+    "wafel_differential_validation": {
+      "first_post_flip_state_matches_n64_emulator": true,
+      "first_post_flip_y": -1071.75,
+      "first_post_flip_vy": -24.0,
+      "first_post_flip_floor": -2487.0,
+      "first_post_flip_ceil": -173.0,
+      "landing_step_matches_n64_vi_timing": true,
+      "native_landing_step": 24,
+      "n64_first_physics_vi": 102,
+      "n64_landing_vi": 150,
+      "known_mutation_detected_as_candidate": true
+    },
+    "wafel_bounded_search": {
+      "attempted_initializations": 507780016,
+      "valid_initializations": 462037119,
+      "simulated_frames": 484122309,
+      "stopped_clock_frames": 218045574,
+      "candidate_threshold_delta_y": 500.0,
+      "candidate_count": 0,
+      "largest_delta_all_speed_modes": 426.764404,
+      "largest_delta_stopped_clock": 139.429199,
+      "exact_reconstruction_trials": 100000000,
+      "exact_reconstruction_largest_delta": 20.0,
+      "integer_xz_grid_passes": 16,
+      "integer_xz_grid_points_per_pass": 386251,
+      "sixteen_frame_episode_frames": 23557536,
+      "source": "results/wafel_search_summary.json"
+    }
+  },
+  "conclusion": {
+    "result": "The observed upwarp is best explained by Mario's 32-bit IEEE-754 Y value changing from 0xC5837800 (-4207.0) to 0xC4837800 (-1051.75): a clear of bit 24 that divides Y by four and raises Mario by 3155.25 units.",
+    "what_is_solved": "That state mutation reproduces the numeric displacement, the new floor and ceiling, the complete falling trajectory, and the upper landing with matching native-Wafel and N64-emulator states and timing.",
+    "normal_gameplay_mechanic_assessment": "No legal game-code path was found. The exact freefall path cannot invoke the ceiling-hang snap; the stopped spinner contributes zero vertical displacement; stale-platform reuse is unreachable; and 484122309 bounded native frame evaluations produced no rise of even 500 units.",
+    "deterministic_exploit_status": "No reproducible normal-gameplay trigger or start-to-finish .m64 was found. This analysis does not claim the historical bounty.",
+    "mechanism_confidence": "high for corruption of the coordinate value or its data path",
+    "initiating_agent": "not identifiable from the surviving video, software, or hardware evidence",
+    "initiator_assessment": [
+      {
+        "explanation": "Transient hardware/data-path upset in RDRAM, CPU cache/register state, a bus, power, or EMI",
+        "assessment": "best fit to a one-bit value change, but not directly evidenced"
+      },
+      {
+        "explanation": "An undiscovered software memory-corruption write",
+        "assessment": "not found in the matched-source audit, traces, replays, platform proof, or bounded searches; logically possible"
+      },
+      {
+        "explanation": "Deliberate memory editing or edited footage",
+        "assessment": "technically capable of the same state change, but unsupported by the continuous race recording"
+      }
+    ],
+    "cosmic_ray_assessment": "An ionizing-particle single-event upset is one possible hardware initiator, not a demonstrated cause. The evidence cannot distinguish it from other electrical or hardware transients.",
+    "cartridge_contact_assessment": "The runner reported unreliable cartridge contact, but the ROM cartridge bus does not directly select Mario's live RDRAM Y word. The anecdote supports only a generic hardware-instability possibility, not this specific mutation."
+  }
+}

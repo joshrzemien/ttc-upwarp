@@ -1,0 +1,51 @@
+diff --git i/src/device/memory/memory.c w/src/device/memory/memory.c
+index ec33edc..b1c9f62 100644
+--- i/src/device/memory/memory.c
++++ w/src/device/memory/memory.c
+@@ -21,6 +21,9 @@
+ #include "memory.h"
++#include <stdio.h>
++#include <stdlib.h>
++
+ #include "api/callbacks.h"
+ #include "api/m64p_types.h"
+ #include "device/ai/ai_controller.h"
+@@ -305,23 +308,43 @@ void read_rdramd(void)
+     readd(read_rdram_dram, &g_dev.ri, *memory_address(), g_dev.mem.rdword);
+ }
++static void trace_mario_y_write(const char* width, uint32_t address, uint64_t value, unsigned int size)
++{
++    static int enabled = -1;
++    const uint32_t target = UINT32_C(0x00339e40);
++    uint32_t physical = address & UINT32_C(0x1fffffff);
++
++    if (enabled < 0)
++        enabled = getenv("TRACE_MARIO_Y") != NULL;
++    if (!enabled || physical > target || physical + size <= target)
++        return;
++
++    fprintf(stderr, "MARIO_Y_WRITE,%s,pc=%08x,address=%08x,value=%016llx\n",
++            width, *r4300_pc() - 4, address, (unsigned long long) value);
++    fflush(stderr);
++}
++
+ void write_rdram(void)
+ {
++    trace_mario_y_write("u32", *memory_address(), *memory_wword(), 4);
+     writew(write_rdram_dram, &g_dev.ri, *memory_address(), *memory_wword());
+ }
+ void write_rdramb(void)
+ {
++    trace_mario_y_write("u8", *memory_address(), *memory_wbyte(), 1);
+     writeb(write_rdram_dram, &g_dev.ri, *memory_address(), *memory_wbyte());
+ }
+ void write_rdramh(void)
+ {
++    trace_mario_y_write("u16", *memory_address(), *memory_whword(), 2);
+     writeh(write_rdram_dram, &g_dev.ri, *memory_address(), *memory_whword());
+ }
+ void write_rdramd(void)
+ {
++    trace_mario_y_write("u64", *memory_address(), *memory_wdword(), 8);
+     writed(write_rdram_dram, &g_dev.ri, *memory_address(), *memory_wdword());
+ }

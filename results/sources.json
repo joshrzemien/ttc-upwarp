@@ -1,0 +1,59 @@
+{
+  "incident_media": [
+    {
+      "name": "Original TTC upwarp highlight",
+      "url": "https://www.youtube.com/watch?v=bhBf5crp0i8"
+    },
+    {
+      "name": "Full race VOD",
+      "url": "https://www.youtube.com/watch?v=TTh3LY-5KKg"
+    }
+  ],
+  "contemporaneous_analysis": [
+    {
+      "name": "pannenkoek2012 bounty announcement and terms",
+      "url": "https://www.youtube.com/watch?v=aNzTUdOHm9A"
+    },
+    {
+      "name": "pannenkoek2012 ceiling-warp versus C5-to-C4 comparison",
+      "url": "https://www.youtube.com/watch?v=X5cwuYFUUAY"
+    },
+    {
+      "name": "DOTA_Teabag's cartridge-contact comment",
+      "url": "https://www.youtube.com/watch?v=X5cwuYFUUAY&lc=UgyQ_5sz9P64rp9L8qx4AaABAg",
+      "quote": "I often had to tilt my cartridge weird ways in order to get the game to start."
+    }
+  ],
+  "technical_sources": [
+    {
+      "name": "Byte-identical Super Mario 64 decompilation source",
+      "url": "https://github.com/n64decomp/sm64",
+      "revision": "9921382a68bb0c865e5e45eb594d9c64db59b1af",
+      "rom_match": "Japanese decomp build matched test ROM MD5 85d61f5525af708c9f1e84dce6dc10e9"
+    },
+    {
+      "name": "Wafel SM64 analysis framework and libsm64 builds",
+      "url": "https://github.com/branpk/wafel",
+      "revision": "5b808b60af15d316a5e2b0f87db34421d6225b57"
+    },
+    {
+      "name": "Fuzzy64 emulator/fuzzing framework",
+      "url": "https://github.com/danebou/Fuzzy64"
+    },
+    {
+      "name": "Nintendo N64 Introductory Manual, RDRAM",
+      "url": "https://ultra64.ca/files/documentation/online-manuals/man/kantan/step1/2-4.html",
+      "relevant_fact": "The N64 has 4 MB by 9 bits of RDRAM; the ninth bit is used for anti-aliasing and Z-buffering."
+    }
+  ],
+  "later_context": [
+    {
+      "name": "Ten-year retrospective and hardware-test account",
+      "url": "https://www.youtube.com/watch?v=vj8DzA9y8ls"
+    },
+    {
+      "name": "Ukikipedia TTC upwarp timeline",
+      "url": "https://ukikipedia.net/wiki/Tick_Tock_Clock#Upwarp"
+    }
+  ]
+}

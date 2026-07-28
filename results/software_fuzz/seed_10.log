@@ -1,0 +1,36 @@
+ __  __                         __   _  _   ____  _					
+|  \/  |_   _ _ __   ___ _ __  / /_ | || | |  _ \| |_   _ ___		
+| |\/| | | | | '_ \ / _ \ '_ \| '_ \| || |_| |_) | | | | / __| 
+| |  | | |_| | |_) |  __/ | | | (_) |__   _|  __/| | |_| \__ \	
+|_|  |_|\__,_| .__/ \___|_| |_|\___/   |_| |_|   |_|\__,_|___/  
+             |_|         http://code.google.com/p/mupen64plus/		
+Mupen64Plus Console User-Interface (Fuzzy Edition) Version 2.5.0
+
+UI-Console: attached to core library 'Mupen64Plus Core' version 2.5.0
+UI-Console:             Includes support for Dynamic Recompiler.
+Opening Lua file '/home/zman/projects/labs/ttc_upwarp/scripts/software_path_fuzz.lua'
+Lua opened successfully
+Core Error: Unable to open rom database file '(null)'.
+UI-Console Warning: unrecognized command-line parameter '--fuzzer-lua'
+UI-Console Warning: unrecognized command-line parameter '/home/zman/projects/labs/ttc_upwarp/scripts/software_path_fuzz.lua'
+Core: Goodname: SUPER MARIO 64 (unknown rom)
+Core: Name: SUPER MARIO 64      
+Core: MD5: 85D61F5525AF708C9F1E84DCE6DC10E9
+Core: CRC: 4EAA3D0E 74757C24
+Core: Imagetype: .z64 (native)
+Core: Rom size: 8388608 bytes (or 8 Mb or 64 Megabits)
+Core: Version: 1444
+Core: Manufacturer: Nintendo
+Core: Country: Japan
+UI-Console Status: Cheat codes disabled.
+UI-Console: using Video plugin: <dummy>
+UI-Console: using Audio plugin: <dummy>
+UI-Console: using Input plugin: <dummy>
+UI-Console: using RSP plugin: <dummy>
+Core Warning: No video plugin attached.  There will be no video output.
+Core Warning: No RSP plugin attached.  The video output will be corrupted.
+Core Warning: No audio plugin attached.  There will be no sound output.
+Core Warning: No input plugin attached.  You won't be able to control the game.
+Core: Starting R4300 emulator: Pure Interpreter
+Core Status: State loaded from: tas26.jp.m64p.st
+FUZZ_DONE,seed=10,trials=621,vis=14900,max_step=0,max_step_trial=1,max_y=-4207,max_y_trial=1
