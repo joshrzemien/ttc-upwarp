@@ -38,7 +38,7 @@ def inspect(path: Path, show_inputs: bool) -> None:
     offset = 0x400 if version >= 3 else 0x200
     inputs = []
     for i in range((len(data) - offset) // 4):
-        buttons, x, y = struct.unpack_from("<Hbb", data, offset + 4 * i)
+        buttons, x, y = struct.unpack_from(">Hbb", data, offset + 4 * i)
         inputs.append((buttons, x, y))
     print(
         f"{path.name}: version={version} uid={uid} vis={vis} samples={samples} "

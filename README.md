@@ -58,6 +58,18 @@ The known bit-clear mutation was included as a positive control and was detected
 
 See [`results/wafel_search_summary.json`](results/wafel_search_summary.json) and the raw logs under [`results/wafel_fuzz/`](results/wafel_fuzz/).
 
+### Reachable-state and MIPS checkpoint (2026-07-28)
+
+A generated 419-input route now reaches the lower floor in the incident spinner's X/Z region by replaying controller input from one complete pre-TTC savestate. It splices two existing input streams; it is a reachable history from that savestate, not the lost incident movie and not yet a video-compatible event reconstruction. Complete savestates were retained locally at route VIs 390, 460, 475, and 520 but remain excluded from this repository.
+
+From the VI-475 snapshot, all `12,269` normalized analog classes in raw X `[-61,61]`, raw Y `[-63,63]`, crossed with all 16 A/B/Z/R subsets, were evaluated for one game update. The complete snapshot was restored before every branch after the first. All `196,304` branches completed without a failure, missing ID, duplicate, non-finite field, TTC exit, upper-platform contact, or rise of at least 500 units. The largest baseline-to-final rise was `42.0` units; the results collapsed to `46,287` projected final states. The projection omits camera, objects, timers, and other RAM, so it is not yet a sound deduplication key for the planned 2–16-update BFS.
+
+All 32 single-bit XOR mutations of `0xC5837800` were also replayed under the synthetic reconstruction. Bit 24 was the unique zero-error match for post-mutation Y, upper landing height, and landing timing. This comparison strengthens the state-transition identification; it does not recover the incident's unknown X/Z, velocity, action, camera, or frame alignment.
+
+The Fuzzy64 pure interpreter was instrumented at every core RDRAM/framebuffer write handler and the PI, SI, and SP RDRAM DMA paths. A full trace of the generated route recorded `1,270` Mario-Y writes, all CPU `SWC1` stores; `488` changed Y, none cleared bit 24, none matched the incident transition, and the largest upward write was `20.0` units. The 64-instruction provenance rings were complete and every full CPU store matched its source FPR. Direct host-write and DMA positive controls verified event attribution. This still cannot test physical DRAM/bus faults, R4300i cache-coherency behavior, or RDP plugin writes that bypass core memory handlers.
+
+See [`results/reachable_state_checkpoint.json`](results/reachable_state_checkpoint.json), [`results/controller_equivalence_summary.json`](results/controller_equivalence_summary.json), [`results/single_bit_y_scan.json`](results/single_bit_y_scan.json), and [`results/mips_trace_reachable_route_summary.json`](results/mips_trace_reachable_route_summary.json).
+
 ## Interpretation and limits
 
 The analysis resolves the state transition and resulting trajectory with high confidence. It does **not** establish the physical initiator.
@@ -77,12 +89,22 @@ The randomized campaigns are bounded searches rather than an exhaustive proof ov
 | [`results/platform_reachability.json`](results/platform_reachability.json) | Retained-platform and spinner-slot reachability proof |
 | [`results/platform_corpus/`](results/platform_corpus/) | Extracted platform-state traces from the reference TAS attempts |
 | [`results/wafel_fuzz/`](results/wafel_fuzz/) | Raw native campaign logs and per-campaign summaries |
+| [`results/reachable_state_checkpoint.json`](results/reachable_state_checkpoint.json) | Reachable-route, snapshot, one-update search, trace, and pending-work checkpoint |
+| [`results/controller_equivalence_summary.json`](results/controller_equivalence_summary.json) | Complete restored-state one-update controller-equivalence campaign |
+| [`results/single_bit_y_scan.json`](results/single_bit_y_scan.json) | Outcomes for every one-bit mutation of the reconstructed pre-event Y word |
+| [`results/mips_trace_reachable_route_summary.json`](results/mips_trace_reachable_route_summary.json) | Original-MIPS Mario-Y store/DMA provenance for the generated route |
+| [`results/mips_trace_reachable_route.log.gz`](results/mips_trace_reachable_route.log.gz) | Compressed raw provenance trace |
+| [`results/reachable_route_p078_r078_a+000.m64`](results/reachable_route_p078_r078_a+000.m64) | Generated reachable controller-input route used by the checkpoint |
 | [`scripts/wafel_incident_fuzz.c`](scripts/wafel_incident_fuzz.c) | Direct-frame Wafel search harness |
 | [`scripts/run_wafel_campaign.sh`](scripts/run_wafel_campaign.sh) | Parallel campaign runner |
 | [`scripts/summarize_wafel_campaign.py`](scripts/summarize_wafel_campaign.py) | Raw-log summarizer |
 | [`scripts/run_reproduction.py`](scripts/run_reproduction.py) | Emulator injection/control runner and assertions |
 | [`scripts/reproduce_bitflip.lua`](scripts/reproduce_bitflip.lua) | Fuzzy64 coordinate-mutation and trace hook |
 | [`fuzzy64-mario-y-trace.patch`](fuzzy64-mario-y-trace.patch) | Native MIPS Mario Y-write instrumentation |
+| [`scripts/build_m64_splice_grid.py`](scripts/build_m64_splice_grid.py) | Reproducible input-stream splice generator |
+| [`scripts/replay_outcome.lua`](scripts/replay_outcome.lua) | Full-route cumulative-rise, floor, landing, and near-miss observer |
+| [`scripts/controller_sequence_scan.lua`](scripts/controller_sequence_scan.lua) | Complete-savestate controller branch runner |
+| [`scripts/summarize_mario_y_trace.py`](scripts/summarize_mario_y_trace.py) | CPU/FPR/DMA Mario-Y provenance validator and summarizer |
 | [`results/sources.json`](results/sources.json) | Source manifest, revisions, media, and citations |
 
 ## Re-running the artifacts

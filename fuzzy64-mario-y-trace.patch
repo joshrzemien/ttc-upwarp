@@ -1,31 +1,277 @@
 diff --git i/src/device/memory/memory.c w/src/device/memory/memory.c
-index ec33edc..b1c9f62 100644
+index ec33edc..9f6dfd2 100644
 --- i/src/device/memory/memory.c
 +++ w/src/device/memory/memory.c
-@@ -21,6 +21,9 @@
+@@ -21,11 +21,16 @@
+ 
  #include "memory.h"
+ 
++#include <string.h>
 +#include <stdio.h>
 +#include <stdlib.h>
 +
  #include "api/callbacks.h"
  #include "api/m64p_types.h"
  #include "device/ai/ai_controller.h"
-@@ -305,23 +308,43 @@ void read_rdramd(void)
+ #include "device/pi/pi_controller.h"
+ #include "device/r4300/new_dynarec/new_dynarec.h" /* for NEW_DYNAREC_ARM */
++#include "device/r4300/cp1.h"
+ #include "device/r4300/r4300_core.h"
+ #include "device/rdp/rdp_core.h"
+ #include "device/ri/ri_controller.h"
+@@ -305,23 +310,279 @@ void read_rdramd(void)
      readd(read_rdram_dram, &g_dev.ri, *memory_address(), g_dev.mem.rdword);
  }
-+static void trace_mario_y_write(const char* width, uint32_t address, uint64_t value, unsigned int size)
-+{
-+    static int enabled = -1;
-+    const uint32_t target = UINT32_C(0x00339e40);
-+    uint32_t physical = address & UINT32_C(0x1fffffff);
+ 
++#define MARIO_Y_TARGET UINT32_C(0x00339e40)
++#define MARIO_Y_CONTEXT_SIZE 64
 +
-+    if (enabled < 0)
-+        enabled = getenv("TRACE_MARIO_Y") != NULL;
-+    if (!enabled || physical > target || physical + size <= target)
++struct mario_y_instruction_context
++{
++    uint64_t sequence;
++    uint32_t pc;
++    uint32_t opcode;
++    uint8_t rs;
++    uint8_t rt;
++    uint8_t fs;
++    uint8_t ft;
++    uint8_t fd;
++    uint64_t gpr_rs;
++    uint64_t gpr_rt;
++    uint64_t fpr_fs;
++    uint64_t fpr_ft;
++    uint64_t fpr_fd;
++    uint32_t fpr_ft_single;
++};
++
++static struct mario_y_instruction_context mario_y_context[MARIO_Y_CONTEXT_SIZE];
++static uint64_t mario_y_instruction_count;
++static uint64_t mario_y_event_count;
++static unsigned int mario_y_context_position;
++static int mario_y_trace_state = -1;
++static const char* mario_y_trace_origin = "CPU";
++
++void trace_mario_y_set_origin(const char* origin)
++{
++    mario_y_trace_origin = origin == NULL ? "CPU" : origin;
++}
++
++static int mario_y_trace_enabled(void)
++{
++    if (mario_y_trace_state < 0)
++        mario_y_trace_state = getenv("TRACE_MARIO_Y") != NULL;
++    return mario_y_trace_state;
++}
++
++void trace_mario_y_instruction(uint32_t pc, uint32_t opcode)
++{
++    struct mario_y_instruction_context* context;
++    int64_t* gpr;
++    int64_t* fpr;
++    float** fpr_single;
++
++    if (!mario_y_trace_enabled())
 +        return;
 +
-+    fprintf(stderr, "MARIO_Y_WRITE,%s,pc=%08x,address=%08x,value=%016llx\n",
-+            width, *r4300_pc() - 4, address, (unsigned long long) value);
++    context = &mario_y_context[mario_y_context_position];
++    gpr = r4300_regs();
++    fpr = r4300_cp1_regs();
++    fpr_single = r4300_cp1_regs_simple();
++    context->sequence = mario_y_instruction_count++;
++    context->pc = pc;
++    context->opcode = opcode;
++    context->rs = (opcode >> 21) & 31;
++    context->rt = (opcode >> 16) & 31;
++    context->fs = (opcode >> 11) & 31;
++    context->ft = (opcode >> 16) & 31;
++    context->fd = (opcode >> 6) & 31;
++    context->gpr_rs = (uint64_t)gpr[context->rs];
++    context->gpr_rt = (uint64_t)gpr[context->rt];
++    context->fpr_fs = (uint64_t)fpr[context->fs];
++    context->fpr_ft = (uint64_t)fpr[context->ft];
++    context->fpr_fd = (uint64_t)fpr[context->fd];
++    memcpy(&context->fpr_ft_single, fpr_single[context->ft],
++           sizeof(context->fpr_ft_single));
++    mario_y_context_position = (mario_y_context_position + 1) % MARIO_Y_CONTEXT_SIZE;
++}
++
++uint32_t trace_mario_y_word(void)
++{
++    uint32_t value;
++    read_rdram_dram(&g_dev.ri, MARIO_Y_TARGET, &value);
++    return value;
++}
++
++static void dump_mario_y_context(uint64_t event)
++{
++    unsigned int available = mario_y_instruction_count < MARIO_Y_CONTEXT_SIZE
++                           ? (unsigned int)mario_y_instruction_count
++                           : MARIO_Y_CONTEXT_SIZE;
++    int age;
++
++    for (age = (int)available - 1; age >= 0; --age)
++    {
++        unsigned int index =
++            (mario_y_context_position + MARIO_Y_CONTEXT_SIZE - 1 - age)
++            % MARIO_Y_CONTEXT_SIZE;
++        const struct mario_y_instruction_context* context = &mario_y_context[index];
++        fprintf(stderr,
++                "MARIO_Y_CONTEXT,event=%llu,age=%d,sequence=%llu,pc=%08x,"
++                "opcode=%08x,rs=%u,rt=%u,fs=%u,ft=%u,fd=%u,"
++                "gpr_rs=%016llx,gpr_rt=%016llx,fpr_fs=%016llx,"
++                "fpr_ft=%016llx,fpr_fd=%016llx,fpr_ft_single=%08x\n",
++                (unsigned long long)event,
++                age,
++                (unsigned long long)context->sequence,
++                context->pc,
++                context->opcode,
++                context->rs,
++                context->rt,
++                context->fs,
++                context->ft,
++                context->fd,
++                (unsigned long long)context->gpr_rs,
++                (unsigned long long)context->gpr_rt,
++                (unsigned long long)context->fpr_fs,
++                (unsigned long long)context->fpr_ft,
++                (unsigned long long)context->fpr_fd,
++                context->fpr_ft_single);
++    }
++}
++
++static int mario_y_range_overlaps(uint32_t destination,
++                                  unsigned int length,
++                                  unsigned int count,
++                                  unsigned int skip)
++{
++    unsigned int block;
++    for (block = 0; block < count; ++block)
++    {
++        uint64_t start = (uint64_t)destination
++                       + (uint64_t)block * (length + skip);
++        uint64_t end = start + length;
++        if (start < (uint64_t)MARIO_Y_TARGET + 4 && end > MARIO_Y_TARGET)
++            return 1;
++    }
++    return 0;
++}
++
++static void trace_mario_y_write(const char* width,
++                                uint32_t address,
++                                uint64_t value,
++                                unsigned int size)
++{
++    uint32_t physical = address & UINT32_C(0x1fffffff);
++    uint32_t old_word;
++    uint32_t new_word;
++    uint32_t mask = 0;
++    uint32_t write_bits = 0;
++    unsigned int byte;
++    uint64_t event;
++    const struct mario_y_instruction_context* context;
++    int16_t immediate;
++    uint32_t effective_address;
++
++    if (!mario_y_trace_enabled()
++        || physical >= MARIO_Y_TARGET + 4
++        || (uint64_t)physical + size <= MARIO_Y_TARGET)
++        return;
++
++    old_word = trace_mario_y_word();
++    for (byte = 0; byte < size; ++byte)
++    {
++        uint32_t byte_address = physical + byte;
++        if (byte_address >= MARIO_Y_TARGET && byte_address < MARIO_Y_TARGET + 4)
++        {
++            unsigned int source_shift = (size - 1 - byte) * 8;
++            unsigned int target_shift = (MARIO_Y_TARGET + 3 - byte_address) * 8;
++            mask |= UINT32_C(0xff) << target_shift;
++            write_bits |= ((uint32_t)(value >> source_shift) & UINT32_C(0xff))
++                        << target_shift;
++        }
++    }
++    new_word = (old_word & ~mask) | (write_bits & mask);
++    event = ++mario_y_event_count;
++    context = mario_y_instruction_count == 0
++            ? NULL
++            : &mario_y_context[
++                (mario_y_context_position + MARIO_Y_CONTEXT_SIZE - 1)
++                % MARIO_Y_CONTEXT_SIZE];
++    immediate = context == NULL ? 0 : (int16_t)context->opcode;
++    effective_address = context == NULL
++                      ? 0
++                      : (uint32_t)(context->gpr_rs + immediate);
++
++    fprintf(stderr,
++            "MARIO_Y_WRITE,event=%llu,origin=%s,width=%s,pc=%08x,opcode=%08x,"
++            "address=%08x,physical=%08x,effective=%08x,"
++            "old=%08x,new=%08x,xor=%08x,mask=%08x,value=%016llx,"
++            "rs=%u,rt=%u,base_gpr=%016llx,source_gpr=%016llx,"
++            "source_fpr=%016llx,source_fpr_single=%08x\n",
++            (unsigned long long)event,
++            mario_y_trace_origin,
++            width,
++            context == NULL ? 0 : context->pc,
++            context == NULL ? 0 : context->opcode,
++            address,
++            physical,
++            effective_address,
++            old_word,
++            new_word,
++            old_word ^ new_word,
++            mask,
++            (unsigned long long)value,
++            context == NULL ? 0 : context->rs,
++            context == NULL ? 0 : context->rt,
++            (unsigned long long)(context == NULL ? 0 : context->gpr_rs),
++            (unsigned long long)(context == NULL ? 0 : context->gpr_rt),
++            (unsigned long long)(context == NULL ? 0 : context->fpr_ft),
++            context == NULL ? 0 : context->fpr_ft_single);
++    dump_mario_y_context(event);
++    fflush(stderr);
++}
++
++void trace_mario_y_dma(const char* engine,
++                       uint32_t destination,
++                       unsigned int length,
++                       unsigned int count,
++                       unsigned int skip,
++                       uint32_t source,
++                       uint32_t old_word)
++{
++    uint64_t event;
++    uint32_t new_word;
++    const struct mario_y_instruction_context* context;
++
++    if (!mario_y_trace_enabled()
++        || !mario_y_range_overlaps(destination, length, count, skip))
++        return;
++
++    event = ++mario_y_event_count;
++    new_word = trace_mario_y_word();
++    context = mario_y_instruction_count == 0
++            ? NULL
++            : &mario_y_context[
++                (mario_y_context_position + MARIO_Y_CONTEXT_SIZE - 1)
++                % MARIO_Y_CONTEXT_SIZE];
++    fprintf(stderr,
++            "MARIO_Y_DMA,event=%llu,origin=%s,engine=%s,pc=%08x,opcode=%08x,"
++            "destination=%08x,length=%u,count=%u,skip=%u,source=%08x,"
++            "old=%08x,new=%08x,xor=%08x\n",
++            (unsigned long long)event,
++            mario_y_trace_origin,
++            engine,
++            context == NULL ? 0 : context->pc,
++            context == NULL ? 0 : context->opcode,
++            destination,
++            length,
++            count,
++            skip,
++            source,
++            old_word,
++            new_word,
++            old_word ^ new_word);
++    dump_mario_y_context(event);
 +    fflush(stderr);
 +}
 +
@@ -34,18 +280,219 @@ index ec33edc..b1c9f62 100644
 +    trace_mario_y_write("u32", *memory_address(), *memory_wword(), 4);
      writew(write_rdram_dram, &g_dev.ri, *memory_address(), *memory_wword());
  }
+ 
  void write_rdramb(void)
  {
 +    trace_mario_y_write("u8", *memory_address(), *memory_wbyte(), 1);
      writeb(write_rdram_dram, &g_dev.ri, *memory_address(), *memory_wbyte());
  }
+ 
  void write_rdramh(void)
  {
 +    trace_mario_y_write("u16", *memory_address(), *memory_whword(), 2);
      writeh(write_rdram_dram, &g_dev.ri, *memory_address(), *memory_whword());
  }
+ 
  void write_rdramd(void)
  {
 +    trace_mario_y_write("u64", *memory_address(), *memory_wdword(), 8);
      writed(write_rdram_dram, &g_dev.ri, *memory_address(), *memory_wdword());
  }
+ 
+@@ -348,21 +609,25 @@ void read_rdramFBd(void)
+ 
+ void write_rdramFB(void)
+ {
++    trace_mario_y_write("fb_u32", *memory_address(), *memory_wword(), 4);
+     writew(write_rdram_fb, &g_dev.dp, *memory_address(), *memory_wword());
+ }
+ 
+ void write_rdramFBb(void)
+ {
++    trace_mario_y_write("fb_u8", *memory_address(), *memory_wbyte(), 1);
+     writeb(write_rdram_fb, &g_dev.dp, *memory_address(), *memory_wbyte());
+ }
+ 
+ void write_rdramFBh(void)
+ {
++    trace_mario_y_write("fb_u16", *memory_address(), *memory_whword(), 2);
+     writeh(write_rdram_fb, &g_dev.dp, *memory_address(), *memory_whword());
+ }
+ 
+ void write_rdramFBd(void)
+ {
++    trace_mario_y_write("fb_u64", *memory_address(), *memory_wdword(), 8);
+     writed(write_rdram_fb, &g_dev.dp, *memory_address(), *memory_wdword());
+ }
+ 
+diff --git i/src/device/memory/memory.h w/src/device/memory/memory.h
+index 039c91e..46f40b8 100644
+--- i/src/device/memory/memory.h
++++ w/src/device/memory/memory.h
+@@ -70,6 +70,17 @@ uint16_t* memory_whword();
+ uint32_t* memory_wword();
+ uint64_t* memory_wdword();
+ 
++void trace_mario_y_set_origin(const char* origin);
++void trace_mario_y_instruction(uint32_t pc, uint32_t opcode);
++uint32_t trace_mario_y_word(void);
++void trace_mario_y_dma(const char* engine,
++                       uint32_t destination,
++                       unsigned int length,
++                       unsigned int count,
++                       unsigned int skip,
++                       uint32_t source,
++                       uint32_t old_word);
++
+ /* struct memory definition is required prior including this */
+ #include "main/main.h"
+ 
+diff --git i/src/device/pi/pi_controller.c w/src/device/pi/pi_controller.c
+index 6bf39de..b373aec 100644
+--- i/src/device/pi/pi_controller.c
++++ w/src/device/pi/pi_controller.c
+@@ -82,6 +82,7 @@ static void dma_pi_write(struct pi_controller* pi)
+     uint32_t rom_address;
+     uint8_t* dram;
+     const uint8_t* rom;
++    uint32_t old_mario_y = trace_mario_y_word();
+ 
+     if (pi->regs[PI_CART_ADDR_REG] < 0x10000000)
+     {
+@@ -106,6 +107,14 @@ static void dma_pi_write(struct pi_controller* pi)
+             DebugMessage(M64MSG_WARNING, "Unknown dma write 0x%" PRIX32 " in dma_pi_write()", pi->regs[PI_CART_ADDR_REG]);
+         }
+ 
++        trace_mario_y_dma("PI_SAVE_TO_RDRAM",
++                           pi->regs[PI_DRAM_ADDR_REG],
++                           (pi->regs[PI_WR_LEN_REG] & 0xffffff) + 1,
++                           1,
++                           0,
++                           pi->regs[PI_CART_ADDR_REG],
++                           old_mario_y);
++
+         /* mark DMA as busy */
+         pi->regs[PI_STATUS_REG] |= PI_STATUS_DMA_BUSY;
+ 
+@@ -153,11 +162,19 @@ static void dma_pi_write(struct pi_controller* pi)
+     rom_address = (pi->regs[PI_CART_ADDR_REG] - 0x10000000) & 0x3ffffff;
+     dram = (uint8_t*)pi->ri->rdram.dram;
+     rom = pi->cart_rom.rom;
++    old_mario_y = trace_mario_y_word();
+ 
+     for(i = 0; i < longueur; ++i)
+     {
+         dram[(dram_address+i)^S8] = rom[(rom_address+i)^S8];
+     }
++    trace_mario_y_dma("PI_CART_TO_RDRAM",
++                       dram_address,
++                       longueur,
++                       1,
++                       0,
++                       pi->regs[PI_CART_ADDR_REG],
++                       old_mario_y);
+ 
+     invalidate_r4300_cached_code(pi->r4300, 0x80000000 + dram_address, longueur);
+     invalidate_r4300_cached_code(pi->r4300, 0xa0000000 + dram_address, longueur);
+diff --git i/src/device/r4300/pure_interp.c w/src/device/r4300/pure_interp.c
+index f095d8b..aa52ea6 100644
+--- i/src/device/r4300/pure_interp.c
++++ w/src/device/r4300/pure_interp.c
+@@ -174,6 +174,7 @@ static void InterpretOpcode(void);
+ void InterpretOpcode()
+ {
+ 	uint32_t op = *fast_mem_access(*r4300_pc());
++	trace_mario_y_instruction(*r4300_pc(), op);
+ 	switch ((op >> 26) & 0x3F) {
+ 	case 0: /* SPECIAL prefix */
+ 		switch (op & 0x3F) {
+diff --git i/src/device/rsp/rsp_core.c w/src/device/rsp/rsp_core.c
+index 3dcb675..3ff0ca8 100644
+--- i/src/device/rsp/rsp_core.c
++++ w/src/device/rsp/rsp_core.c
+@@ -72,6 +72,8 @@ static void dma_sp_read(struct rsp_core* sp)
+ 
+     unsigned char *spmem = (unsigned char*)sp->mem + (sp->regs[SP_MEM_ADDR_REG] & 0x1000);
+     unsigned char *dram = (unsigned char*)sp->ri->rdram.dram;
++    unsigned int initial_dramaddr = dramaddr;
++    uint32_t old_mario_y = trace_mario_y_word();
+ 
+     for(j=0; j<count; j++) {
+         for(i=0; i<length; i++) {
+@@ -81,6 +83,13 @@ static void dma_sp_read(struct rsp_core* sp)
+         }
+         dramaddr+=skip;
+     }
++    trace_mario_y_dma("SP_MEM_TO_RDRAM",
++                       initial_dramaddr,
++                       length,
++                       count,
++                       skip,
++                       UINT32_C(0x04000000) | (sp->regs[SP_MEM_ADDR_REG] & 0x1fff),
++                       old_mario_y);
+ }
+ 
+ static void update_sp_status(struct rsp_core* sp, uint32_t w)
+diff --git i/src/device/si/si_controller.c w/src/device/si/si_controller.c
+index 95e393e..9387e94 100644
+--- i/src/device/si/si_controller.c
++++ w/src/device/si/si_controller.c
+@@ -66,6 +66,7 @@ static void dma_si_write(struct si_controller* si)
+ static void dma_si_read(struct si_controller* si)
+ {
+     int i;
++    uint32_t old_mario_y;
+ 
+     if (si->regs[SI_PIF_ADDR_RD64B_REG] != 0x1FC007C0)
+     {
+@@ -74,11 +75,19 @@ static void dma_si_read(struct si_controller* si)
+     }
+ 
+     update_pif_read(si);
++    old_mario_y = trace_mario_y_word();
+ 
+     for (i = 0; i < PIF_RAM_SIZE; i += 4)
+     {
+         si->ri->rdram.dram[(si->regs[SI_DRAM_ADDR_REG]+i)/4] = sl(*(uint32_t*)(&si->pif.ram[i]));
+     }
++    trace_mario_y_dma("SI_PIF_TO_RDRAM",
++                       si->regs[SI_DRAM_ADDR_REG],
++                       PIF_RAM_SIZE,
++                       1,
++                       0,
++                       si->regs[SI_PIF_ADDR_RD64B_REG],
++                       old_mario_y);
+ 
+     cp0_update_count();
+ 
+diff --git i/src/fuzzer/fuzzer_memory.c w/src/fuzzer/fuzzer_memory.c
+index a2cd651..946ead5 100644
+--- i/src/fuzzer/fuzzer_memory.c
++++ w/src/fuzzer/fuzzer_memory.c
+@@ -2,11 +2,12 @@
+ #include <lua.h>
+ #include <lauxlib.h>
+ #include <lualib.h>
+-#include "fuzzer\fuzzer_lualib.h"
+-#include "main\main.h"
+-#include "device\memory\memory.h"
+-#include "fuzzer\luaext.h"
++#include "fuzzer/fuzzer_lualib.h"
++#include "main/main.h"
++#include "device/memory/memory.h"
++#include "fuzzer/luaext.h"
+ 
++typedef uint8_t byte;
+ typedef uint16_t hword;
+ typedef uint32_t word;
+ typedef uint64_t dword;
+@@ -25,7 +26,9 @@ static int lua_set##T (lua_State *L) { \
+ 	T value = (T)luaL_check##luaType(L, 3); \
+ 	*memory_address() = (uint32_t)luaL_checkinteger(L, 2); \
+ 	*memory_w##lookup() = *((lookup *)&value); \
++	trace_mario_y_set_origin("FUZZER"); \
+ 	write_##lookup##_in_memory(); \
++	trace_mario_y_set_origin(NULL); \
+ 	return 0; \
+ } 
+ 

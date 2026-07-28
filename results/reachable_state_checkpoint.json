@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "checkpoint_date_utc": "2026-07-28",
+  "status": "partial",
+  "route": {
+    "path": "results/reachable_route_p078_r078_a+000.m64",
+    "sha256": "aa2233675b1636cca50e3a95558dba488ad827964ecfb35403a4ce7f04920bd7",
+    "input_samples": 419,
+    "construction": {
+      "prefix_count": 78,
+      "route_start": 78,
+      "route_end": 419,
+      "angle_degrees": 0,
+      "prefix_source_sha256": "5999a075ae48df4344910e0f40939b1f9505378cc4b7719e34956f28c5672ea5",
+      "route_source_sha256": "85ea34ae98cc43d9bd986724f2b35fc8191edc084515694e043efbbe67e4d8b6",
+      "base_savestate_sha256": "2732c65808c54b74a85a97a18c50fa4c7fbb1afd85d60efcbd6d81ee796323a7"
+    },
+    "reachability_claim": "Every recorded state on this generated route follows from controller input replay against one complete pre-TTC savestate; no individual Mario or object fields are overwritten. The route is spliced from two input streams and is not an original incident movie."
+  },
+  "local_snapshots": {
+    "committed": false,
+    "reason": "Savestates are excluded with copyrighted ROM data and compiled dependencies.",
+    "files": [
+      {
+        "name": "p078_r078_vi390.m64p",
+        "sha256": "da8502d673165e278a7e732fbf9908a2138e6241fa77f733b939f97c3a54023d"
+      },
+      {
+        "name": "p078_r078_vi460.m64p",
+        "sha256": "026866b3b2104145a25cee5beac7093909695dbb68fbe2038c06198025d59b08"
+      },
+      {
+        "name": "p078_r078_vi475.m64p",
+        "sha256": "1a4c42401240661ef1af5071ce6d7be1013953f4378a1defa72a0eef7d498615"
+      },
+      {
+        "name": "p078_r078_vi520.m64p",
+        "sha256": "e193e67bb4f6bb6c041dd36e67e900359c3ec6f2e032074679b00646b49c8d6d"
+      }
+    ]
+  },
+  "vi475_observed_state": {
+    "global_timer": 105170,
+    "action": "0x0C400201",
+    "x": 972.442993,
+    "y": -4822.0,
+    "z": 1600.42371,
+    "relation_to_incident": "Reachable lower-floor state in the spinner's X/Z region, not a video-compatible incident state."
+  },
+  "one_update_search": {
+    "summary": "results/controller_equivalence_summary.json",
+    "candidates": 196304,
+    "complete_restores": true,
+    "largest_y_rise": 42.0,
+    "rise_at_least_500_count": 0,
+    "projected_final_states": 46287
+  },
+  "mips_route_trace": {
+    "summary": "results/mips_trace_reachable_route_summary.json",
+    "raw_trace": "results/mips_trace_reachable_route.log.gz",
+    "mario_y_write_events": 1270,
+    "changed_events": 488,
+    "origins": {
+      "CPU": 1270,
+      "DMA": 0,
+      "FUZZER": 0
+    },
+    "opcodes": {
+      "SWC1": 1270
+    },
+    "largest_upward_write": 20.0,
+    "exact_incident_transition_count": 0,
+    "single_bit_24_clear_count": 0,
+    "context_failure_count": 0
+  },
+  "pending": [
+    "Fit a set of emulator-rendered states to the VOD instead of assuming event X/Z, action, velocity, camera, clock phase, or dropped-frame alignment.",
+    "Continue state-deduplicated search beyond the completed one-update controller-equivalence horizon.",
+    "Run the instrumented original-MIPS trace over every retained video-compatible route candidate.",
+    "Test on original N64 hardware or a model that implements R4300i cache/coherency behavior; Fuzzy64 cannot observe physical bus or DRAM faults."
+  ]
+}

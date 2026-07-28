@@ -7,3 +7,5 @@ __pycache__/
 *.n64
 *.v64
 .wine*/
+*.m64p
+*.m64p.st

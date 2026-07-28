@@ -117,6 +117,40 @@
       "integer_xz_grid_points_per_pass": 386251,
       "sixteen_frame_episode_frames": 23557536,
       "source": "results/wafel_search_summary.json"
+    },
+    "single_bit_y_scan": {
+      "mutations_tested": 32,
+      "failed_runs": 0,
+      "unique_zero_error_bit": 24,
+      "source": "results/single_bit_y_scan.json",
+      "scope_limit": "The comparison uses the synthetic event state and does not recover the incident's unknown complete state."
+    },
+    "reachable_one_update_search": {
+      "route": "results/reachable_route_p078_r078_a+000.m64",
+      "route_is_original_incident_movie": false,
+      "snapshot_restored_before_each_branch_after_first": true,
+      "analog_equivalence_classes": 12269,
+      "button_classes": 16,
+      "candidate_count": 196304,
+      "largest_y_rise": 42.0,
+      "rise_at_least_500_count": 0,
+      "projected_final_state_count": 46287,
+      "source": "results/controller_equivalence_summary.json"
+    },
+    "mips_route_provenance": {
+      "mario_y_write_count": 1270,
+      "changed_write_count": 488,
+      "cpu_swc1_count": 1270,
+      "dma_write_count": 0,
+      "exact_incident_transition_count": 0,
+      "single_bit_24_clear_count": 0,
+      "largest_upward_write": 20.0,
+      "context_failure_count": 0,
+      "source": "results/mips_trace_reachable_route_summary.json",
+      "scope_limits": [
+        "Fuzzy64 pure-interpreter semantics do not implement physical R4300i cache-coherency behavior or physical DRAM and bus faults.",
+        "RDP plugin-side framebuffer writes that bypass core memory handlers are outside the trace patch."
+      ]
     }
   },
   "conclusion": {

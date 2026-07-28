@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "complete": true,
+  "candidate_count": 196304,
+  "result_count": 196304,
+  "worker_count": 32,
+  "elapsed_seconds": 636.5771471199987,
+  "throughput_candidates_per_second": 308.37424951259754,
+  "inputs": {
+    "route_movie": "results/reachable_route_p078_r078_a+000.m64",
+    "route_movie_sha256": "aa2233675b1636cca50e3a95558dba488ad827964ecfb35403a4ce7f04920bd7",
+    "snapshot_name": "p078_r078_vi475.m64p",
+    "snapshot_sha256_at_campaign_time": "838f8a0742735a183c58043766b9ba6ca9f822a588d0631db0d59a81aba859dd",
+    "sequence_sha256": "763ce21139ef066b8560f1584c64b4d06d09958614f9a2ee9ee4e6907c538da4",
+    "scanner_sha256": "ec72a4048ef8b9f606926bd0fb532bbc8864c9b553c354ff4827f137ceb1914c",
+    "rom_md5": "85d61f5525af708c9f1e84dce6dc10e9"
+  },
+  "scope": {
+    "horizon_updates": 1,
+    "analog_equivalence_classes": 12269,
+    "analog_raw_domain": {
+      "x": [-61, 61],
+      "y": [-63, 63]
+    },
+    "button_subsets": ["A", "B", "Z", "R"],
+    "button_class_count": 16,
+    "restoration": "The complete Mupen64Plus state was restored before every branch after the first.",
+    "projection": [
+      "level",
+      "action",
+      "position",
+      "velocity",
+      "face_yaw",
+      "floor_height",
+      "ceiling_height",
+      "floor_pointer",
+      "platform_pointer"
+    ],
+    "projection_limit": "The 46287-state count is not a full-state equivalence relation; camera, objects, action timers, and other RAM are omitted."
+  },
+  "outcomes": {
+    "baseline_y": -4822.0,
+    "largest_baseline_to_final_y_delta": 42.0,
+    "large_rise_threshold": 500.0,
+    "large_rise_count": 0,
+    "upper_platform_contact_count": 0,
+    "exited_ttc_count": 0,
+    "nonfinite_field_count": 0,
+    "projected_final_state_count": 46287
+  },
+  "integrity": {
+    "missing_ids": [],
+    "duplicate_results": 0,
+    "worker_failures": [],
+    "full_campaign_sha256": "96b30f96194738dbda5227a4a673ab4b50602ef305114b0869bb73326b2f4d61",
+    "full_campaign_note": "The complete per-candidate aggregate is omitted because it is generated data; this compact summary preserves the campaign hashes and aggregate result."
+  }
+}
