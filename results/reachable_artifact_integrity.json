@@ -1,0 +1,836 @@
+{
+  "artifacts": {
+    "full_campaign_aggregate": {
+      "expected_sha256": "96b30f96194738dbda5227a4a673ab4b50602ef305114b0869bb73326b2f4d61",
+      "hash_status": "missing",
+      "observed_sha256": null,
+      "path": "results/controller_equivalence_campaign.json",
+      "present": false,
+      "size_bytes": null
+    },
+    "route": {
+      "artifact_type": "m64_route_movie",
+      "campaign_binding": {
+        "recorded_campaign_sha256": "aa2233675b1636cca50e3a95558dba488ad827964ecfb35403a4ce7f04920bd7",
+        "status": "campaign-bound"
+      },
+      "expected_sha256": "aa2233675b1636cca50e3a95558dba488ad827964ecfb35403a4ce7f04920bd7",
+      "format": {
+        "declared_input_samples": 419,
+        "format": "M64",
+        "format_status": "valid",
+        "header_bytes": 1024,
+        "rom_country": "0x004a",
+        "rom_crc32": "0x0e3daa4e",
+        "rom_name": "SUPER MARIO 64",
+        "signature": "4d36341a",
+        "stored_input_samples": 419,
+        "trailing_input_bytes": 0,
+        "version": 3
+      },
+      "hash_status": "hash-matched",
+      "observed_sha256": "aa2233675b1636cca50e3a95558dba488ad827964ecfb35403a4ce7f04920bd7",
+      "path": "results/reachable_route_p078_r078_a+000.m64",
+      "present": true,
+      "size_bytes": 2700,
+      "status_labels": [
+        "present",
+        "hash-matched",
+        "campaign-bound"
+      ]
+    },
+    "scripts": {
+      "audit": {
+        "artifact_type": "script",
+        "campaign_binding": {
+          "status": "not-recorded"
+        },
+        "expected_sha256": null,
+        "hash_status": "not-recorded",
+        "observed_sha256": "ab2eea11b96873a39246f1abf90c8b845041fcf4bfed07e2cb1b5f60c622e81b",
+        "path": "scripts/audit_reachable_artifacts.py",
+        "present": true,
+        "size_bytes": 42969
+      },
+      "builder": {
+        "artifact_type": "script",
+        "campaign_binding": {
+          "status": "not-recorded"
+        },
+        "expected_sha256": null,
+        "hash_status": "not-recorded",
+        "observed_sha256": "4a340917dd8b1f29da77b2e6c08b738279faa3d91532cf68208727b79a5941df",
+        "path": "scripts/build_controller_equivalence_sequences.py",
+        "present": true,
+        "size_bytes": 4458
+      },
+      "route_builder": {
+        "artifact_type": "script",
+        "campaign_binding": {
+          "status": "not-recorded"
+        },
+        "expected_sha256": null,
+        "hash_status": "not-recorded",
+        "observed_sha256": "1e2ad59e3b66e10cf04bc6eb77467bcc620de26c342ab647b5ffa4e73b89e3b7",
+        "path": "scripts/build_m64_splice_grid.py",
+        "present": true,
+        "size_bytes": 5048
+      },
+      "runner": {
+        "artifact_type": "script",
+        "campaign_binding": {
+          "status": "not-recorded"
+        },
+        "expected_sha256": null,
+        "hash_status": "not-recorded",
+        "observed_sha256": "78874ea89bbe795f1e731c2864252b48c3a7b85cea4eedaa4d8ddd80fdd66229",
+        "path": "scripts/run_controller_sequence_campaign.py",
+        "present": true,
+        "size_bytes": 9167
+      },
+      "scanner": {
+        "artifact_type": "script",
+        "campaign_binding": {
+          "status": "not-recorded"
+        },
+        "expected_sha256": null,
+        "hash_status": "not-recorded",
+        "observed_sha256": "92cc2c505587aea72c20804a8a6852b1a16e2f846bc88f7ebf80eef1e6d2d301",
+        "path": "scripts/controller_sequence_scan.lua",
+        "present": true,
+        "size_bytes": 8456
+      },
+      "summarizer": {
+        "artifact_type": "script",
+        "campaign_binding": {
+          "status": "not-recorded"
+        },
+        "expected_sha256": null,
+        "hash_status": "not-recorded",
+        "observed_sha256": "02b3584b241c276156f80dc19a1cad6761bc0d6c06e8c8b2c40d3babf2e6dd5e",
+        "path": "scripts/summarize_controller_sequence_campaign.py",
+        "present": true,
+        "size_bytes": 6161
+      },
+      "validator": {
+        "artifact_type": "script",
+        "campaign_binding": {
+          "status": "not-recorded"
+        },
+        "expected_sha256": null,
+        "hash_status": "not-recorded",
+        "observed_sha256": "e2528c30e618328e65005d961f31623974b7a607852cec5520e7c2c2eee6a578",
+        "path": "scripts/validate_controller_sequence_campaign.py",
+        "present": true,
+        "size_bytes": 4844
+      }
+    },
+    "sequence_payload": {
+      "expected_sha256": "763ce21139ef066b8560f1584c64b4d06d09958614f9a2ee9ee4e6907c538da4",
+      "hash_status": "missing",
+      "observed_sha256": null,
+      "path": "results/controller_equivalence_sequences.txt",
+      "present": false,
+      "size_bytes": null
+    },
+    "sequence_reconstruction": {
+      "analog_equivalence_class_count": 12269,
+      "button_class_count": 16,
+      "error": null,
+      "raw_domain": {
+        "x": [
+          -61,
+          61
+        ],
+        "y": [
+          -63,
+          63
+        ]
+      },
+      "reconstructed_sha256": "763ce21139ef066b8560f1584c64b4d06d09958614f9a2ee9ee4e6907c538da4",
+      "reconstruction_hash_status": "hash-matched",
+      "recorded_sha256": "763ce21139ef066b8560f1584c64b4d06d09958614f9a2ee9ee4e6907c538da4",
+      "retained": false,
+      "sequence_count": 196304,
+      "status": "reconstructed"
+    },
+    "snapshots": [
+      {
+        "artifact_type": "mupen64plus_m64p_savestate",
+        "campaign_binding": {
+          "campaign_time_bytes_present": null,
+          "matching_retained_path": null,
+          "recorded_campaign_sha256": null,
+          "status": "not-recorded"
+        },
+        "checkpoint_recorded_sha256": "da8502d673165e278a7e732fbf9908a2138e6241fa77f733b939f97c3a54023d",
+        "compressed_size_bytes": 1327104,
+        "decompressed_size_bytes": 4781176,
+        "gzip": {
+          "compressed_size_bytes": 1327104,
+          "decompressed_size_bytes": 4781176,
+          "error": null,
+          "format": "gzip",
+          "format_status": "gzip",
+          "header": {
+            "compression_method": 8,
+            "extra_flags": 0,
+            "flags": 0,
+            "magic": "1f8b",
+            "mtime": 0,
+            "operating_system": 3
+          },
+          "member_count": 1,
+          "members": [
+            {
+              "compressed_bytes_available": 1327104,
+              "compressed_bytes_consumed": 1327104,
+              "decompressed_size_bytes": 4781176,
+              "eof": false,
+              "error": null
+            }
+          ],
+          "status": "truncated",
+          "stream_status": "truncated",
+          "trailing_size_bytes": 0
+        },
+        "hash_status": "hash-matched",
+        "m64_save_header": {
+          "format_version_bytes_hex": "00010100",
+          "header_status": "parseable",
+          "prefix_bytes_hex": "4d36342b5341564500010100",
+          "rom_identity_matches_expected": true,
+          "rom_identity_status": "parseable",
+          "rom_md5": "85d61f5525af708c9f1e84dce6dc10e9",
+          "rom_md5_ascii": "85D61F5525AF708C9F1E84DCE6DC10E9",
+          "rom_md5_offset": 12,
+          "signature": "M64+SAVE",
+          "signature_hex": "4d36342b53415645"
+        },
+        "mario_state": {
+          "action": null,
+          "error": "complete gzip EOF required",
+          "gfx_position": null,
+          "mario_obj_pointer": null,
+          "mario_state_physical_address": "0x00339E00",
+          "mario_state_virtual_base": "0x80000000",
+          "positions_equal": null,
+          "raw_container_offset": 444,
+          "state_position": null,
+          "status": "not-attempted"
+        },
+        "name": "p078_r078_vi390.m64p",
+        "path": "results/reachable_snapshots/p078_r078_vi390.m64p",
+        "present": true,
+        "sha256": "da8502d673165e278a7e732fbf9908a2138e6241fa77f733b939f97c3a54023d",
+        "status_labels": [
+          "present",
+          "truncated",
+          "hash-matched"
+        ]
+      },
+      {
+        "artifact_type": "mupen64plus_m64p_savestate",
+        "campaign_binding": {
+          "campaign_time_bytes_present": null,
+          "matching_retained_path": null,
+          "recorded_campaign_sha256": null,
+          "status": "not-recorded"
+        },
+        "checkpoint_recorded_sha256": "026866b3b2104145a25cee5beac7093909695dbb68fbe2038c06198025d59b08",
+        "compressed_size_bytes": 1310720,
+        "decompressed_size_bytes": 3936344,
+        "gzip": {
+          "compressed_size_bytes": 1310720,
+          "decompressed_size_bytes": 3936344,
+          "error": null,
+          "format": "gzip",
+          "format_status": "gzip",
+          "header": {
+            "compression_method": 8,
+            "extra_flags": 0,
+            "flags": 0,
+            "magic": "1f8b",
+            "mtime": 0,
+            "operating_system": 3
+          },
+          "member_count": 1,
+          "members": [
+            {
+              "compressed_bytes_available": 1310720,
+              "compressed_bytes_consumed": 1310720,
+              "decompressed_size_bytes": 3936344,
+              "eof": false,
+              "error": null
+            }
+          ],
+          "status": "truncated",
+          "stream_status": "truncated",
+          "trailing_size_bytes": 0
+        },
+        "hash_status": "hash-matched",
+        "m64_save_header": {
+          "format_version_bytes_hex": "00010100",
+          "header_status": "parseable",
+          "prefix_bytes_hex": "4d36342b5341564500010100",
+          "rom_identity_matches_expected": true,
+          "rom_identity_status": "parseable",
+          "rom_md5": "85d61f5525af708c9f1e84dce6dc10e9",
+          "rom_md5_ascii": "85D61F5525AF708C9F1E84DCE6DC10E9",
+          "rom_md5_offset": 12,
+          "signature": "M64+SAVE",
+          "signature_hex": "4d36342b53415645"
+        },
+        "mario_state": {
+          "action": null,
+          "error": "complete gzip EOF required",
+          "gfx_position": null,
+          "mario_obj_pointer": null,
+          "mario_state_physical_address": "0x00339E00",
+          "mario_state_virtual_base": "0x80000000",
+          "positions_equal": null,
+          "raw_container_offset": 444,
+          "state_position": null,
+          "status": "not-attempted"
+        },
+        "name": "p078_r078_vi460.m64p",
+        "path": "results/reachable_snapshots/p078_r078_vi460.m64p",
+        "present": true,
+        "sha256": "026866b3b2104145a25cee5beac7093909695dbb68fbe2038c06198025d59b08",
+        "status_labels": [
+          "present",
+          "truncated",
+          "hash-matched"
+        ]
+      },
+      {
+        "artifact_type": "mupen64plus_m64p_savestate",
+        "campaign_binding": {
+          "campaign_time_bytes_present": false,
+          "matching_retained_path": null,
+          "reason": "retained bytes do not match the campaign-time SHA-256",
+          "recorded_campaign_sha256": "838f8a0742735a183c58043766b9ba6ca9f822a588d0631db0d59a81aba859dd",
+          "status": "not-campaign-bound"
+        },
+        "checkpoint_recorded_sha256": "1a4c42401240661ef1af5071ce6d7be1013953f4378a1defa72a0eef7d498615",
+        "compressed_size_bytes": 1318912,
+        "decompressed_size_bytes": 6626134,
+        "gzip": {
+          "compressed_size_bytes": 1318912,
+          "decompressed_size_bytes": 6626134,
+          "error": null,
+          "format": "gzip",
+          "format_status": "gzip",
+          "header": {
+            "compression_method": 8,
+            "extra_flags": 0,
+            "flags": 0,
+            "magic": "1f8b",
+            "mtime": 0,
+            "operating_system": 3
+          },
+          "member_count": 1,
+          "members": [
+            {
+              "compressed_bytes_available": 1318912,
+              "compressed_bytes_consumed": 1318912,
+              "decompressed_size_bytes": 6626134,
+              "eof": false,
+              "error": null
+            }
+          ],
+          "status": "truncated",
+          "stream_status": "truncated",
+          "trailing_size_bytes": 0
+        },
+        "hash_status": "hash-matched",
+        "m64_save_header": {
+          "format_version_bytes_hex": "00010100",
+          "header_status": "parseable",
+          "prefix_bytes_hex": "4d36342b5341564500010100",
+          "rom_identity_matches_expected": true,
+          "rom_identity_status": "parseable",
+          "rom_md5": "85d61f5525af708c9f1e84dce6dc10e9",
+          "rom_md5_ascii": "85D61F5525AF708C9F1E84DCE6DC10E9",
+          "rom_md5_offset": 12,
+          "signature": "M64+SAVE",
+          "signature_hex": "4d36342b53415645"
+        },
+        "mario_state": {
+          "action": null,
+          "error": "complete gzip EOF required",
+          "gfx_position": null,
+          "mario_obj_pointer": null,
+          "mario_state_physical_address": "0x00339E00",
+          "mario_state_virtual_base": "0x80000000",
+          "positions_equal": null,
+          "raw_container_offset": 444,
+          "state_position": null,
+          "status": "not-attempted"
+        },
+        "name": "p078_r078_vi475.m64p",
+        "path": "results/reachable_snapshots/p078_r078_vi475.m64p",
+        "present": true,
+        "sha256": "1a4c42401240661ef1af5071ce6d7be1013953f4378a1defa72a0eef7d498615",
+        "status_labels": [
+          "present",
+          "truncated",
+          "hash-matched",
+          "not-campaign-bound"
+        ]
+      },
+      {
+        "artifact_type": "mupen64plus_m64p_savestate",
+        "campaign_binding": {
+          "campaign_time_bytes_present": null,
+          "matching_retained_path": null,
+          "recorded_campaign_sha256": null,
+          "status": "not-recorded"
+        },
+        "checkpoint_recorded_sha256": "e193e67bb4f6bb6c041dd36e67e900359c3ec6f2e032074679b00646b49c8d6d",
+        "compressed_size_bytes": 1334102,
+        "decompressed_size_bytes": 16789316,
+        "gzip": {
+          "compressed_size_bytes": 1334102,
+          "decompressed_size_bytes": 16789316,
+          "error": null,
+          "format": "gzip",
+          "format_status": "gzip",
+          "header": {
+            "compression_method": 8,
+            "extra_flags": 0,
+            "flags": 0,
+            "magic": "1f8b",
+            "mtime": 0,
+            "operating_system": 3
+          },
+          "member_count": 1,
+          "members": [
+            {
+              "compressed_bytes_available": 1334102,
+              "compressed_bytes_consumed": 1334102,
+              "decompressed_size_bytes": 16789316,
+              "eof": true,
+              "error": null
+            }
+          ],
+          "status": "valid",
+          "stream_status": "valid",
+          "trailing_size_bytes": 0
+        },
+        "hash_status": "hash-matched",
+        "m64_save_header": {
+          "format_version_bytes_hex": "00010100",
+          "header_status": "parseable",
+          "prefix_bytes_hex": "4d36342b5341564500010100",
+          "rom_identity_matches_expected": true,
+          "rom_identity_status": "parseable",
+          "rom_md5": "85d61f5525af708c9f1e84dce6dc10e9",
+          "rom_md5_ascii": "85D61F5525AF708C9F1E84DCE6DC10E9",
+          "rom_md5_offset": 12,
+          "signature": "M64+SAVE",
+          "signature_hex": "4d36342b53415645"
+        },
+        "mario_state": {
+          "action": "0x04000471",
+          "error": null,
+          "gfx_position": [
+            1080.1817626953125,
+            -4822.0,
+            1549.3189697265625
+          ],
+          "mario_obj_pointer": "0x8034DBB8",
+          "mario_state_physical_address": "0x00339E00",
+          "mario_state_virtual_base": "0x80000000",
+          "positions_equal": true,
+          "raw_container_offset": 444,
+          "state_position": [
+            1080.1817626953125,
+            -4822.0,
+            1549.3189697265625
+          ],
+          "status": "parsed"
+        },
+        "name": "p078_r078_vi520.m64p",
+        "path": "results/reachable_snapshots/p078_r078_vi520.m64p",
+        "present": true,
+        "sha256": "e193e67bb4f6bb6c041dd36e67e900359c3ec6f2e032074679b00646b49c8d6d",
+        "status_labels": [
+          "present",
+          "valid",
+          "hash-matched"
+        ]
+      }
+    ]
+  },
+  "audit": {
+    "filesystem_timestamps_excluded": true,
+    "name": "historical reachable artifact integrity",
+    "path_basis": "all paths are relative to --root",
+    "scope": "The retained bytes and hashes from the compact historical campaign record; the fresh reassessment is cataloged separately."
+  },
+  "inferences": [
+    {
+      "blocking_observations": [
+        "campaign-time p078_r078_vi475.m64p bytes are not retained as a complete gzip under the recorded SHA-256",
+        "the current controller scanner SHA-256 differs from the campaign-recorded scanner hash",
+        "the sequence payload and manifest are not retained under the recorded SHA-256",
+        "the full per-candidate campaign aggregate is absent or does not match its recorded SHA-256"
+      ],
+      "conclusion": "The historical recorded one-update result is not independently reproducible from retained inputs.",
+      "id": "historical-one-update-reproducibility",
+      "reproducible_from_retained_inputs": false,
+      "sequence_hash_rederivation_matches": true
+    },
+    {
+      "conclusion": "These integrity findings do not establish that the historical campaign never happened.",
+      "historical_run_status": "not-determined",
+      "id": "historical-run-neutrality"
+    }
+  ],
+  "inputs": {
+    "evidence_files": [
+      {
+        "expected_sha256": null,
+        "hash_status": "not-recorded",
+        "observed_sha256": "333ee862d36d6f4509d48980803fe8b684835336fb0faf9d0260f54418d6aec9",
+        "path": "results/reachable_state_checkpoint.json",
+        "present": true,
+        "size_bytes": 12389
+      },
+      {
+        "expected_sha256": null,
+        "hash_status": "not-recorded",
+        "observed_sha256": "dbe6e7f744c0a2053e2e58dbef47e433cb488526f6961ff0f94ec5dd424a6e19",
+        "path": "results/controller_equivalence_summary.json",
+        "present": true,
+        "size_bytes": 2764
+      },
+      {
+        "expected_sha256": null,
+        "hash_status": "not-recorded",
+        "observed_sha256": "5cf9a73f7d7b110c5e4862b546c67d043f6a05d96f494c35976a7191574aeda0",
+        "path": "results/reachable_campaign_reassessment.json",
+        "present": true,
+        "size_bytes": 70687
+      },
+      {
+        "expected_sha256": null,
+        "hash_status": "not-recorded",
+        "observed_sha256": "47e683d8340bb1e5b495fc55cf72f284c74adc9d2e5735dc0d080e765a3da9de",
+        "path": "results/sources.json",
+        "present": true,
+        "size_bytes": 2418
+      }
+    ],
+    "expected_rom_md5": "85d61f5525af708c9f1e84dce6dc10e9"
+  },
+  "integrity_gates": [
+    {
+      "action": "Recapture or resave each named Mupen savestate and retain the complete gzip bytes; rerun this audit before using it.",
+      "condition": "gzip EOF validation fails for p078_r078_vi390.m64p, p078_r078_vi460.m64p, p078_r078_vi475.m64p.",
+      "id": "recapture-valid-savestates",
+      "status": "blocked"
+    },
+    {
+      "action": "Recover or recapture the exact campaign-time p078_r078_vi475.m64p savestate, verify its SHA-256 and gzip EOF, then rerun the campaign.",
+      "condition": "The campaign-time p078_r078_vi475.m64p SHA-256 has no matching complete retained gzip.",
+      "id": "recover-campaign-snapshot",
+      "status": "blocked"
+    },
+    {
+      "action": "Recover the scanner revision matching the recorded hash or explicitly rerun with the current scanner and record its hash.",
+      "condition": "Current controller_sequence_scan.lua does not match the recorded campaign hash.",
+      "id": "pin-scanner-revision",
+      "status": "blocked"
+    },
+    {
+      "action": "Retain the exact generated sequence plus manifest and the deterministic all-results aggregate with SHA-256.",
+      "condition": "The sequence payload/manifest or full per-candidate aggregate is absent or hash-mismatched.",
+      "id": "retain-sequence-and-aggregate",
+      "status": "blocked"
+    },
+    {
+      "action": "After the recapture and hash gates pass, rerun the one-update campaign with complete restores and preserve logs, sequence, snapshot, scanner, and aggregate hashes together.",
+      "condition": "At least one campaign input or retained output is not independently bound.",
+      "id": "rerun-one-update-campaign",
+      "status": "blocked"
+    }
+  ],
+  "observations": [
+    {
+      "finding": "The retained reachable route SHA-256 matches both checkpoint and campaign route hashes.",
+      "id": "route-hash",
+      "sha256": "aa2233675b1636cca50e3a95558dba488ad827964ecfb35403a4ce7f04920bd7",
+      "status": "hash-matched"
+    },
+    {
+      "finding": "Retained Mupen savestate gzip members were read through their stream ends.",
+      "id": "snapshot-gzip-streams",
+      "truncated": [
+        "p078_r078_vi390.m64p",
+        "p078_r078_vi460.m64p",
+        "p078_r078_vi475.m64p"
+      ],
+      "valid": [
+        "p078_r078_vi520.m64p"
+      ]
+    },
+    {
+      "finding": "Current snapshot bytes are compared with checkpoint-recorded hashes.",
+      "hash_matched": [
+        "p078_r078_vi390.m64p",
+        "p078_r078_vi460.m64p",
+        "p078_r078_vi475.m64p",
+        "p078_r078_vi520.m64p"
+      ],
+      "hash_mismatched": [],
+      "id": "snapshot-checkpoint-hashes",
+      "missing": []
+    },
+    {
+      "campaign_recorded_sha256": "838f8a0742735a183c58043766b9ba6ca9f822a588d0631db0d59a81aba859dd",
+      "campaign_snapshot_name": "p078_r078_vi475.m64p",
+      "campaign_time_bytes_present": false,
+      "finding": "The retained campaign snapshot path is checked for a complete gzip stream and the campaign-time SHA-256.",
+      "id": "campaign-time-snapshot",
+      "retained_sha256": "1a4c42401240661ef1af5071ce6d7be1013953f4378a1defa72a0eef7d498615"
+    },
+    {
+      "current_sha256": "92cc2c505587aea72c20804a8a6852b1a16e2f846bc88f7ebf80eef1e6d2d301",
+      "finding": "The current controller scanner is compared with the campaign-recorded hash.",
+      "id": "scanner-hash",
+      "recorded_sha256": "ec72a4048ef8b9f606926bd0fb532bbc8864c9b553c354ff4827f137ceb1914c",
+      "status": "hash-mismatch"
+    },
+    {
+      "finding": "The campaign sequence payload is checked at the conventional retained path; the current builder also re-derives the recorded hash in memory.",
+      "id": "sequence-payload",
+      "reconstructed_sha256": "763ce21139ef066b8560f1584c64b4d06d09958614f9a2ee9ee4e6907c538da4",
+      "reconstruction_hash_status": "hash-matched",
+      "recorded_sha256": "763ce21139ef066b8560f1584c64b4d06d09958614f9a2ee9ee4e6907c538da4",
+      "retained": false,
+      "retained_hash_status": "missing",
+      "retained_path": "results/controller_equivalence_sequences.txt",
+      "retained_sha256": null
+    },
+    {
+      "finding": "The full per-candidate aggregate is checked at the conventional retained path.",
+      "id": "raw-campaign-aggregate",
+      "recorded_sha256": "96b30f96194738dbda5227a4a673ab4b50602ef305114b0869bb73326b2f4d61",
+      "retained": false,
+      "retained_hash_status": "missing",
+      "retained_path": "results/controller_equivalence_campaign.json",
+      "retained_sha256": null,
+      "summary_note": "The complete per-candidate aggregate is omitted. Its recorded hash is preserved, but the aggregate cannot be independently checked from retained files."
+    }
+  ],
+  "recorded_hash_comparisons": [
+    {
+      "evidence_binding": "campaign-route",
+      "expected_sha256": "aa2233675b1636cca50e3a95558dba488ad827964ecfb35403a4ce7f04920bd7",
+      "field": "inputs.route_movie_sha256",
+      "observed_sha256": "aa2233675b1636cca50e3a95558dba488ad827964ecfb35403a4ce7f04920bd7",
+      "path": "results/reachable_route_p078_r078_a+000.m64",
+      "source_artifact": "results/controller_equivalence_summary.json",
+      "status": "hash-matched"
+    },
+    {
+      "evidence_binding": "campaign-scanner",
+      "expected_sha256": "ec72a4048ef8b9f606926bd0fb532bbc8864c9b553c354ff4827f137ceb1914c",
+      "field": "inputs.scanner_sha256",
+      "observed_sha256": "92cc2c505587aea72c20804a8a6852b1a16e2f846bc88f7ebf80eef1e6d2d301",
+      "path": "scripts/controller_sequence_scan.lua",
+      "source_artifact": "results/controller_equivalence_summary.json",
+      "status": "hash-mismatch"
+    },
+    {
+      "evidence_binding": "campaign-time-snapshot",
+      "expected_sha256": "838f8a0742735a183c58043766b9ba6ca9f822a588d0631db0d59a81aba859dd",
+      "field": "inputs.snapshot_sha256_at_campaign_time",
+      "observed_sha256": "1a4c42401240661ef1af5071ce6d7be1013953f4378a1defa72a0eef7d498615",
+      "path": "results/reachable_snapshots/p078_r078_vi475.m64p",
+      "source_artifact": "results/controller_equivalence_summary.json",
+      "status": "hash-mismatch"
+    },
+    {
+      "evidence_binding": "raw-campaign-aggregate",
+      "expected_sha256": "96b30f96194738dbda5227a4a673ab4b50602ef305114b0869bb73326b2f4d61",
+      "field": "integrity.full_campaign_sha256",
+      "observed_sha256": null,
+      "path": "results/controller_equivalence_campaign.json",
+      "source_artifact": "results/controller_equivalence_summary.json",
+      "status": "missing"
+    },
+    {
+      "evidence_binding": "checkpoint-retained-snapshot",
+      "expected_sha256": "da8502d673165e278a7e732fbf9908a2138e6241fa77f733b939f97c3a54023d",
+      "field": "local_snapshots.files[p078_r078_vi390.m64p].sha256",
+      "observed_sha256": "da8502d673165e278a7e732fbf9908a2138e6241fa77f733b939f97c3a54023d",
+      "path": "results/reachable_snapshots/p078_r078_vi390.m64p",
+      "source_artifact": "results/reachable_state_checkpoint.json",
+      "status": "hash-matched"
+    },
+    {
+      "evidence_binding": "checkpoint-retained-snapshot",
+      "expected_sha256": "026866b3b2104145a25cee5beac7093909695dbb68fbe2038c06198025d59b08",
+      "field": "local_snapshots.files[p078_r078_vi460.m64p].sha256",
+      "observed_sha256": "026866b3b2104145a25cee5beac7093909695dbb68fbe2038c06198025d59b08",
+      "path": "results/reachable_snapshots/p078_r078_vi460.m64p",
+      "source_artifact": "results/reachable_state_checkpoint.json",
+      "status": "hash-matched"
+    },
+    {
+      "evidence_binding": "checkpoint-retained-snapshot",
+      "expected_sha256": "1a4c42401240661ef1af5071ce6d7be1013953f4378a1defa72a0eef7d498615",
+      "field": "local_snapshots.files[p078_r078_vi475.m64p].sha256",
+      "observed_sha256": "1a4c42401240661ef1af5071ce6d7be1013953f4378a1defa72a0eef7d498615",
+      "path": "results/reachable_snapshots/p078_r078_vi475.m64p",
+      "source_artifact": "results/reachable_state_checkpoint.json",
+      "status": "hash-matched"
+    },
+    {
+      "evidence_binding": "checkpoint-retained-snapshot",
+      "expected_sha256": "e193e67bb4f6bb6c041dd36e67e900359c3ec6f2e032074679b00646b49c8d6d",
+      "field": "local_snapshots.files[p078_r078_vi520.m64p].sha256",
+      "observed_sha256": "e193e67bb4f6bb6c041dd36e67e900359c3ec6f2e032074679b00646b49c8d6d",
+      "path": "results/reachable_snapshots/p078_r078_vi520.m64p",
+      "source_artifact": "results/reachable_state_checkpoint.json",
+      "status": "hash-matched"
+    },
+    {
+      "evidence_binding": "checkpoint-unresolved-base-state",
+      "expected_sha256": "2732c65808c54b74a85a97a18c50fa4c7fbb1afd85d60efcbd6d81ee796323a7",
+      "field": "route.construction.base_savestate_sha256",
+      "observed_sha256": null,
+      "path": null,
+      "source_artifact": "results/reachable_state_checkpoint.json",
+      "status": "missing"
+    },
+    {
+      "evidence_binding": "checkpoint-unresolved-source",
+      "expected_sha256": "5999a075ae48df4344910e0f40939b1f9505378cc4b7719e34956f28c5672ea5",
+      "field": "route.construction.prefix_source_sha256",
+      "observed_sha256": null,
+      "path": null,
+      "source_artifact": "results/reachable_state_checkpoint.json",
+      "status": "missing"
+    },
+    {
+      "evidence_binding": "checkpoint-unresolved-source",
+      "expected_sha256": "85ea34ae98cc43d9bd986724f2b35fc8191edc084515694e043efbbe67e4d8b6",
+      "field": "route.construction.route_source_sha256",
+      "observed_sha256": null,
+      "path": null,
+      "source_artifact": "results/reachable_state_checkpoint.json",
+      "status": "missing"
+    },
+    {
+      "evidence_binding": "checkpoint-route",
+      "expected_sha256": "aa2233675b1636cca50e3a95558dba488ad827964ecfb35403a4ce7f04920bd7",
+      "field": "route.sha256",
+      "observed_sha256": "aa2233675b1636cca50e3a95558dba488ad827964ecfb35403a4ce7f04920bd7",
+      "path": "results/reachable_route_p078_r078_a+000.m64",
+      "source_artifact": "results/reachable_state_checkpoint.json",
+      "status": "hash-matched"
+    }
+  ],
+  "reproducibility": {
+    "blockers": [
+      "campaign-time p078_r078_vi475.m64p bytes are not retained as a complete gzip under the recorded SHA-256",
+      "the current controller scanner SHA-256 differs from the campaign-recorded scanner hash",
+      "the sequence payload and manifest are not retained under the recorded SHA-256",
+      "the full per-candidate campaign aggregate is absent or does not match its recorded SHA-256"
+    ],
+    "historical_recorded_one_update_result_independently_reproducible_from_retained_inputs": false,
+    "historical_run_status": "not-determined"
+  },
+  "schema_version": 1,
+  "scope_limits": [
+    "This audit checks the compact historical campaign's retained bytes, hashes, gzip framing, and parseable M64+SAVE identity; it does not run an emulator or ROM.",
+    "A valid retained savestate does not prove that it was the savestate used by the historical campaign unless its campaign-time hash matches.",
+    "Missing or mismatched artifacts cannot distinguish an absent historical run from lost or changed evidence.",
+    "This audit makes no claim that the physical initiator or a normal-gameplay trigger has been solved."
+  ],
+  "source_references": [
+    {
+      "name": "Byte-identical Super Mario 64 decompilation source",
+      "revision": "9921382a68bb0c865e5e45eb594d9c64db59b1af",
+      "section": "technical_sources",
+      "url": "https://github.com/n64decomp/sm64"
+    },
+    {
+      "name": "Wafel SM64 analysis framework and libsm64 builds",
+      "revision": "5b808b60af15d316a5e2b0f87db34421d6225b57",
+      "section": "technical_sources",
+      "url": "https://github.com/branpk/wafel"
+    },
+    {
+      "name": "Fuzzy64 emulator/fuzzing framework",
+      "revision": null,
+      "section": "technical_sources",
+      "url": "https://github.com/danebou/Fuzzy64"
+    },
+    {
+      "name": "Nintendo N64 Introductory Manual, RDRAM",
+      "revision": null,
+      "section": "technical_sources",
+      "url": "https://ultra64.ca/files/documentation/online-manuals/man/kantan/step1/2-4.html"
+    },
+    {
+      "name": "Nintendo 64 Developers News 1.2, R4300 multiply erratum",
+      "revision": "1.2",
+      "section": "technical_sources",
+      "url": "http://ultra64.ca/files/documentation/online-manuals/man/developerNews/news-02.html"
+    },
+    {
+      "name": "Original TTC upwarp highlight",
+      "revision": null,
+      "section": "incident_media",
+      "url": "https://www.youtube.com/watch?v=bhBf5crp0i8"
+    },
+    {
+      "name": "Full race VOD",
+      "revision": null,
+      "section": "incident_media",
+      "url": "https://www.youtube.com/watch?v=TTh3LY-5KKg"
+    },
+    {
+      "name": "pannenkoek2012 bounty announcement and terms",
+      "revision": null,
+      "section": "contemporaneous_analysis",
+      "url": "https://www.youtube.com/watch?v=aNzTUdOHm9A"
+    },
+    {
+      "name": "pannenkoek2012 ceiling-warp versus C5-to-C4 comparison",
+      "revision": null,
+      "section": "contemporaneous_analysis",
+      "url": "https://www.youtube.com/watch?v=X5cwuYFUUAY"
+    },
+    {
+      "name": "DOTA_Teabag's cartridge-contact comment",
+      "revision": null,
+      "section": "contemporaneous_analysis",
+      "url": "https://www.youtube.com/watch?v=X5cwuYFUUAY&lc=UgyQ_5sz9P64rp9L8qx4AaABAg"
+    },
+    {
+      "name": "Ten-year retrospective and hardware-test account",
+      "revision": null,
+      "section": "later_context",
+      "url": "https://www.youtube.com/watch?v=vj8DzA9y8ls"
+    },
+    {
+      "name": "Ukikipedia TTC upwarp timeline",
+      "revision": null,
+      "section": "later_context",
+      "url": "https://ukikipedia.net/wiki/Tick_Tock_Clock#Upwarp"
+    }
+  ],
+  "tool_versions": {
+    "gzip_decoder": "zlib.decompressobj(16 + zlib.MAX_WBITS), read until eof",
+    "python_implementation": "CPython",
+    "python_version": "3.14.6",
+    "sha256": "hashlib.sha256",
+    "zlib_version": "1.2.12"
+  }
+}

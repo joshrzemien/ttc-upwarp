@@ -1,6 +1,13 @@
 {
   "schema_version": 1,
-  "complete": true,
+  "recorded_complete": true,
+  "evidence_status": {
+    "classification": "Recorded compact campaign result",
+    "independently_reproducible_from_retained_inputs": false,
+    "historical_run_status": "not-determined",
+    "audit": "results/reachable_artifact_integrity.json",
+    "reason": "The campaign-time VI-475 bytes and full aggregate are absent, the retained VI-475 gzip is truncated, and the current scanner hash differs from the recorded hash. The current builder does re-derive the recorded sequence hash."
+  },
   "candidate_count": 196304,
   "result_count": 196304,
   "worker_count": 32,
@@ -24,7 +31,7 @@
     },
     "button_subsets": ["A", "B", "Z", "R"],
     "button_class_count": 16,
-    "restoration": "The complete Mupen64Plus state was restored before every branch after the first.",
+    "restoration": "The recorded campaign reports that the complete Mupen64Plus state was restored before every branch after the first; the retained inputs are insufficient to independently reproduce that claim.",
     "projection": [
       "level",
       "action",
@@ -53,6 +60,6 @@
     "duplicate_results": 0,
     "worker_failures": [],
     "full_campaign_sha256": "96b30f96194738dbda5227a4a673ab4b50602ef305114b0869bb73326b2f4d61",
-    "full_campaign_note": "The complete per-candidate aggregate is omitted because it is generated data; this compact summary preserves the campaign hashes and aggregate result."
+    "full_campaign_note": "The complete per-candidate aggregate is omitted. Its recorded hash is preserved, but the aggregate cannot be independently checked from retained files."
   }
 }

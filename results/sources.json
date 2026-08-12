@@ -44,6 +44,12 @@
       "name": "Nintendo N64 Introductory Manual, RDRAM",
       "url": "https://ultra64.ca/files/documentation/online-manuals/man/kantan/step1/2-4.html",
       "relevant_fact": "The N64 has 4 MB by 9 bits of RDRAM; the ninth bit is used for anti-aliasing and Z-buffering."
+    },
+    {
+      "name": "Nintendo 64 Developers News 1.2, R4300 multiply erratum",
+      "url": "http://ultra64.ca/files/documentation/online-manuals/man/developerNews/news-02.html",
+      "revision": "1.2",
+      "relevant_fact": "A back-to-back multiply can fail when the first is MUL.S or MUL.D with a signaling NaN, zero, or infinity source; one intervening instruction prevents the problem."
     }
   ],
   "later_context": [

@@ -10,7 +10,7 @@
   "dependencies": {
     "libmupen64plus.so.2.0.0": {
       "path": "/home/zman/projects/labs/ttc_upwarp/Fuzzy64/mupen64plus-core/projects/unix/libmupen64plus.so.2.0.0",
-      "sha256": "4c8811ca3357213e6a75379f4db998d05419f49204161601a654f43609777d18"
+      "sha256": "91fcb50bde0200d69a7476d8e341b43e88458d0197b1b02bc468b1c642832b79"
     },
     "mupen64plus": {
       "path": "/home/zman/projects/labs/ttc_upwarp/Fuzzy64/mupen64plus-ui-console/projects/unix/mupen64plus",
@@ -38,7 +38,7 @@
     }
   },
   "failed_runs": 0,
-  "generated_utc": "2026-07-28T06:16:33.439952+00:00",
+  "generated_utc": "2026-08-12T12:43:40.194798+00:00",
   "ranked_bits": [
     24,
     23,

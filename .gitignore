@@ -9,3 +9,5 @@ __pycache__/
 .wine*/
 *.m64p
 *.m64p.st
+results/reachable_reassessment_*/
+results/floor_null_fallback_probe_*/

@@ -1,0 +1,273 @@
+{
+  "commands": [
+    "scp /Users/zman/projects/labs/ttc_upwarp/scripts/floor_null_probe.c roach:/home/zman/projects/labs/ttc_upwarp/scripts/floor_null_probe.c",
+    "cd /home/zman/projects/labs/ttc_upwarp && /nix/store/2glwr7lcawg7m9rk4p5bdjlf7svpw405-x86_64-w64-mingw32-gcc-wrapper-15.2.0/bin/x86_64-w64-mingw32-gcc -O2 -std=c11 -Wall -Wextra -L/nix/store/gr5hjbyxing73wqm3jz9ssn2qp1x664r-mcfgthread-x86_64-w64-mingw32-2.4.1/lib -o scripts/floor_null_probe.exe scripts/floor_null_probe.c",
+    "cd /home/zman/projects/labs/ttc_upwarp && WINEDEBUG=-all WINEPREFIX=/home/zman/projects/labs/ttc_upwarp/.wine-wafel /nix/store/m3vk5lr49wdgyya04jxnyr4d63wcwvki-wine64-11.0/bin/wine scripts/floor_null_probe.exe Z:/home/zman/projects/labs/ttc_upwarp/wafel/libsm64/sm64_jp.dll positive 0 3 539362 > /home/zman/projects/labs/ttc_upwarp/results/floor_null_fallback_probe_20260812/positive.log 2>&1",
+    "cd /home/zman/projects/labs/ttc_upwarp && WINEDEBUG=-all WINEPREFIX=/home/zman/projects/labs/ttc_upwarp/.wine-wafel /nix/store/m3vk5lr49wdgyya04jxnyr4d63wcwvki-wine64-11.0/bin/wine scripts/floor_null_probe.exe Z:/home/zman/projects/labs/ttc_upwarp/wafel/libsm64/sm64_jp.dll sweep 0 3 539362 > /home/zman/projects/labs/ttc_upwarp/results/floor_null_fallback_probe_20260812/sweep.log 2>&1",
+    "cd /home/zman/projects/labs/ttc_upwarp && WINEDEBUG=-all WINEPREFIX=/home/zman/projects/labs/ttc_upwarp/.wine-wafel /nix/store/m3vk5lr49wdgyya04jxnyr4d63wcwvki-wine64-11.0/bin/wine scripts/floor_null_probe.exe Z:/home/zman/projects/labs/ttc_upwarp/wafel/libsm64/sm64_jp.dll natural 4096 3 539362 > /home/zman/projects/labs/ttc_upwarp/results/floor_null_fallback_probe_20260812/natural.log 2>&1"
+  ],
+  "completion": {
+    "compile_returncode": 0,
+    "natural_attempted_updates": 4096,
+    "natural_completed_updates": 4096,
+    "natural_returncode": 0,
+    "positive_returncode": 0,
+    "sweep_returncode": 0
+  },
+  "generated_at_utc": "2026-08-12T08:55:32.859543+00:00",
+  "inputs": {
+    "compiler": "/nix/store/2glwr7lcawg7m9rk4p5bdjlf7svpw405-x86_64-w64-mingw32-gcc-wrapper-15.2.0/bin/x86_64-w64-mingw32-gcc",
+    "compiler_sha256": "a5053578dc9e2c5994a5687dc5c615a90baad66e6f6e0cac12c0a95204cdf9fe",
+    "libsm64_dll_remote": "/home/zman/projects/labs/ttc_upwarp/wafel/libsm64/sm64_jp.dll",
+    "libsm64_dll_sha256": "a3dc4984628bfc2bcdc92eb2c3af47beae1472fd54c07a24c286046d7962f67b",
+    "orchestrator_sha256": "981828dae8cbb5e423b53e50774df47658f24aa876c7a1b918efd5fbe0d33d70",
+    "probe_executable_remote": "/home/zman/projects/labs/ttc_upwarp/scripts/floor_null_probe.exe",
+    "probe_executable_sha256": "9f2c4e1ad3b59f756b0767819dad582972663ca850b053d549ad2cf4fb68bad3",
+    "probe_source": "scripts/floor_null_probe.c",
+    "probe_source_sha256": "85f7c727964ffc86e3ddcbe43d17af91791717b40109f91d053e5f73d99df7d1",
+    "remote_probe_source_sha256": "85f7c727964ffc86e3ddcbe43d17af91791717b40109f91d053e5f73d99df7d1",
+    "sm64_jp_elf_sha256_remote": "5127672dd7e98022639ee053ee7816f0d646afd42b61c5c5129549b31468eac2",
+    "sm64_jp_map_sha256_remote": "23499f4f66f4d5a67d31d09c5816f4d5e3bf3478eb7dddb5fff440649721650b",
+    "sm64_mario_c_sha256_remote": "a16936e42951b0ecf232fbbdb50d9f596bb8f59d13cf5269e5ba9537bca9b26e",
+    "sm64_source_commit": "9921382a68bb0c865e5e45eb594d9c64db59b1af",
+    "wafel_source_commit": "5b808b60af15d316a5e2b0f87db34421d6225b57",
+    "wine": "/nix/store/m3vk5lr49wdgyya04jxnyr4d63wcwvki-wine64-11.0/bin/wine",
+    "wine_sha256": "5add9819910ab1c8fbb2767923d396a3d7a83196827743fefe107a8df05b724a"
+  },
+  "instrumentation": {
+    "branch_counter": "incremented only on the NULL-path target, not on direct find_floor calls",
+    "method": "runtime x64 trampoline patch in the loaded DLL; the floor-null target's original 14 bytes are copied, a counter increment is executed, then those bytes resume at target+14",
+    "target_discovery": "scan exported update_mario_geometry_inputs for cmp qword [m+0x70],0 followed by je and verify the 14-byte target prologue",
+    "target_relative_to_geometry": "0x200",
+    "traces": "positive and sweep rows capture state around direct geometry calls; native run counter is actual sm64_update execution",
+    "verified_original_target_prologue": "488B83A80000004889F1488D5038"
+  },
+  "limitations": [
+    "The positive control is synthetic state divergence and is not evidence of a natural initiator or reachable precursor.",
+    "The natural run starts from Wafel's bootstrap_ttc initialization, not the unavailable incident savestate; it is a bounded controller-only native domain.",
+    "The runtime counter instruments the loaded JP libsm64 binary's compiled NULL-path target; it does not alter the fallback semantics, but it is not a rebuild of the DLL from modified mario.c source.",
+    "No ROM MD5 is applicable because this run exercises the prebuilt unlocked DLL directly and does not load a ROM."
+  ],
+  "logs": [
+    {
+      "bytes_utf8": 0,
+      "command": "cd /home/zman/projects/labs/ttc_upwarp && /nix/store/2glwr7lcawg7m9rk4p5bdjlf7svpw405-x86_64-w64-mingw32-gcc-wrapper-15.2.0/bin/x86_64-w64-mingw32-gcc -O2 -std=c11 -Wall -Wextra -L/nix/store/gr5hjbyxing73wqm3jz9ssn2qp1x664r-mcfgthread-x86_64-w64-mingw32-2.4.1/lib -o scripts/floor_null_probe.exe scripts/floor_null_probe.c",
+      "remote_path": "/home/zman/projects/labs/ttc_upwarp/results/floor_null_fallback_probe_20260812/compile.log",
+      "returncode": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes_utf8": 987,
+      "command": "cd /home/zman/projects/labs/ttc_upwarp && WINEDEBUG=-all WINEPREFIX=/home/zman/projects/labs/ttc_upwarp/.wine-wafel /nix/store/m3vk5lr49wdgyya04jxnyr4d63wcwvki-wine64-11.0/bin/wine scripts/floor_null_probe.exe Z:/home/zman/projects/labs/ttc_upwarp/wafel/libsm64/sm64_jp.dll positive 0 3 539362 > /home/zman/projects/labs/ttc_upwarp/results/floor_null_fallback_probe_20260812/positive.log 2>&1",
+      "remote_path": "/home/zman/projects/labs/ttc_upwarp/results/floor_null_fallback_probe_20260812/positive.log",
+      "returncode": 0,
+      "sha256": "5091a685d7f1130e5744405a26f14b8e08a249134d3e4dd6fa409bda1aa30c4b"
+    },
+    {
+      "bytes_utf8": 6309,
+      "command": "cd /home/zman/projects/labs/ttc_upwarp && WINEDEBUG=-all WINEPREFIX=/home/zman/projects/labs/ttc_upwarp/.wine-wafel /nix/store/m3vk5lr49wdgyya04jxnyr4d63wcwvki-wine64-11.0/bin/wine scripts/floor_null_probe.exe Z:/home/zman/projects/labs/ttc_upwarp/wafel/libsm64/sm64_jp.dll sweep 0 3 539362 > /home/zman/projects/labs/ttc_upwarp/results/floor_null_fallback_probe_20260812/sweep.log 2>&1",
+      "remote_path": "/home/zman/projects/labs/ttc_upwarp/results/floor_null_fallback_probe_20260812/sweep.log",
+      "returncode": 0,
+      "sha256": "62f18ae0b3e4200019226b195b0e17facdaacaef26066185eac35c5a12a31072"
+    },
+    {
+      "bytes_utf8": 518,
+      "command": "cd /home/zman/projects/labs/ttc_upwarp && WINEDEBUG=-all WINEPREFIX=/home/zman/projects/labs/ttc_upwarp/.wine-wafel /nix/store/m3vk5lr49wdgyya04jxnyr4d63wcwvki-wine64-11.0/bin/wine scripts/floor_null_probe.exe Z:/home/zman/projects/labs/ttc_upwarp/wafel/libsm64/sm64_jp.dll natural 4096 3 539362 > /home/zman/projects/labs/ttc_upwarp/results/floor_null_fallback_probe_20260812/natural.log 2>&1",
+      "remote_path": "/home/zman/projects/labs/ttc_upwarp/results/floor_null_fallback_probe_20260812/natural.log",
+      "returncode": 0,
+      "sha256": "74e74cf083d91d4ea370437f83706b53906de8fb813385444975f7f27f421a76"
+    }
+  ],
+  "natural_bounded_run": {
+    "attempted_updates": 4096,
+    "bounded_negative": "No floor-null branch execution occurred in this 4096-update controller-only native DLL domain; this does not prove absence from all reachable game states or all input movies.",
+    "branch_hits": 0,
+    "completed_updates": 4096,
+    "domain": {
+      "controller_sequence": "PRNG seed 539362; button palette {0, L, R, U, L+R}; stick_x=stick_y=0 each frame",
+      "frames_requested": 4096,
+      "initialization": "bootstrap_ttc: sm64_init, init_mario_from_save_file, TTC level/area/act selection, one game update",
+      "post_bootstrap_state_writes": "only gControllerPads button/stick bytes; no MarioState, Object, floor, platform, RAM, or field injection",
+      "speed": 3
+    },
+    "representative_frames": [
+      {
+        "action": "0C400201",
+        "floor_height": -4822.0,
+        "floor_null": false,
+        "frame": 0,
+        "timer": 3,
+        "xyz": [
+          1417.0,
+          -4822.0,
+          -548.0
+        ]
+      },
+      {
+        "action": "0C000227",
+        "floor_height": -4822.0,
+        "floor_null": false,
+        "frame": 4095,
+        "timer": 4098,
+        "xyz": [
+          1417.0,
+          -4822.0,
+          -548.0
+        ]
+      }
+    ],
+    "status": "complete"
+  },
+  "positive_control": {
+    "branch_execution_proven": true,
+    "geometry_call": {
+      "action": "0100088C",
+      "after_gfx_xyz": [
+        800.0,
+        -4207.0,
+        1900.0
+      ],
+      "before_gfx_xyz": [
+        800.0,
+        -4207.0,
+        1900.0
+      ],
+      "before_physical_xyz": [
+        10000.0,
+        -4207.0,
+        10000.0
+      ],
+      "branch_hits": 1,
+      "copied_physical_xyz": [
+        800.0,
+        -4207.0,
+        1900.0
+      ],
+      "first_floor_height": -11000.0,
+      "first_floor_null": true,
+      "platform_null": true,
+      "second_floor_height": -5211.0,
+      "second_floor_null": false
+    },
+    "interpretation": "The direct geometry call uses injected OOB physical XYZ and a valid graphical XYZ; the runtime counter hit once and the copied physical XYZ exactly matched gfx XYZ. The separate update case propagated the injected Y divergence through one full update.",
+    "one_update": {
+      "action": "0100088C",
+      "after_gfx_xyz": [
+        800.0,
+        -1071.75,
+        1900.0
+      ],
+      "after_physical_xyz": [
+        800.0,
+        -1071.75,
+        1900.0
+      ],
+      "before_gfx_xyz": [
+        800.0,
+        -1051.75,
+        1900.0
+      ],
+      "before_physical_xyz": [
+        10000.0,
+        -4207.0,
+        10000.0
+      ],
+      "branch_hits": 1,
+      "first_floor_height": -11000.0,
+      "first_floor_null": true,
+      "one_update_y_delta": 3135.25,
+      "platform_null": true,
+      "second_floor_height": -2487.0,
+      "second_floor_null": false
+    },
+    "status": "pass"
+  },
+  "run_id": "20260812",
+  "source_behavior": {
+    "fallback": "vec3f_copy(m->pos, m->marioObj->header.gfx.pos)",
+    "jp_assembly_branch": {
+      "fallback_copy": "0x80253834 function: vec3f_copy(m->pos, m->marioObj->header.gfx.pos)",
+      "first_find_floor_result_test": "0x80253834 function: store result, branch on m->floor == NULL",
+      "second_find_floor": "immediately after copy, then jump back to ceiling/gas/water handling"
+    },
+    "jp_map_addresses": {
+      "find_floor": "0x80381900",
+      "update_mario_geometry_inputs": "0x80253834"
+    },
+    "possible_gfx_physical_divergence_fields": [
+      "marioObj->header.gfx.pos (renderer position) can lag or differ from MarioState.pos",
+      "marioObj object oPosX/oPosY/oPosZ are separate object fields and are not the fallback source",
+      "gfx animation translation, quicksand sink, throwMatrix attachment, teleports/warps, and renderer/object updates can write or retain graphical position"
+    ],
+    "postcondition": "with a non-NULL second surface, geometry inputs continue; with NULL, level_trigger_warp(WARP_OP_DEATH) runs",
+    "preconditions": [
+      "f32_find_wall_collision has run on MarioState.pos",
+      "first find_floor(pos.x,pos.y,pos.z,&m->floor) returns a NULL surface",
+      "m->marioObj and m->marioObj->header.gfx.pos are valid"
+    ],
+    "second_query": "find_floor(m->pos.x,m->pos.y,m->pos.z,&m->floor)",
+    "source_file": "sm64/src/game/mario.c",
+    "source_lines": "1318-1330"
+  },
+  "status": "pass",
+  "synthetic_sweep": {
+    "branch_hits": 30,
+    "domain": "5 physical Y values x 6 graphical Y values; physical x/z=(10000,10000) outside loaded TTC collision, graphical x/z=(800,1900), direct update_mario_geometry_inputs call",
+    "first_query_null_count": 30,
+    "incident_scale_movement_possible_under_injected_divergence": true,
+    "incident_scale_propagation_delta_y": 3155.25,
+    "max_propagation_delta_y": 10500.0,
+    "min_propagation_delta_y": -5207.0,
+    "propagation_relation_exact": true,
+    "relation": "copied_physical_xyz = graphical_xyz; copied_y - physical_y = graphical_y - physical_y",
+    "representative_traces": [
+      {
+        "branch_hits": 1,
+        "copied_xyz": [
+          800.0,
+          -4207.0,
+          1900.0
+        ],
+        "first_floor_height": -11000.0,
+        "first_floor_null": true,
+        "gfx_y": -4207.0,
+        "physical_y": -4207.0,
+        "propagation_delta_y": 0.0,
+        "second_floor_height": -5211.0,
+        "second_floor_null": false
+      },
+      {
+        "branch_hits": 1,
+        "copied_xyz": [
+          800.0,
+          -1051.75,
+          1900.0
+        ],
+        "first_floor_height": -11000.0,
+        "first_floor_null": true,
+        "gfx_y": -1051.75,
+        "physical_y": -4207.0,
+        "propagation_delta_y": 3155.25,
+        "second_floor_height": -2487.0,
+        "second_floor_null": false
+      },
+      {
+        "branch_hits": 1,
+        "copied_xyz": [
+          800.0,
+          500.0,
+          1900.0
+        ],
+        "first_floor_height": -11000.0,
+        "first_floor_null": true,
+        "gfx_y": 500.0,
+        "physical_y": 1000.0,
+        "propagation_delta_y": -500.0,
+        "second_floor_height": -19.0,
+        "second_floor_null": false
+      }
+    ],
+    "rows": 30,
+    "second_query_null_count": 0
+  }
+}

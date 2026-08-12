@@ -4,11 +4,15 @@
     "video_entry_interval_seconds": [3467.0, 3468.0],
     "video_upwarp_interval_seconds": [3481.40, 3481.47],
     "capture_rate": "30000/1001",
+    "encoded_event_frame_indices": [431, 432],
+    "encoded_event_frame_source_times_seconds": [3481.4106, 3481.443966666667],
+    "cadence_source": "results/vod_cadence_audit.json",
     "course": "Tick Tock Clock",
     "mission": "Stomp on the Thwomp",
     "observed_coin_count_near_event": 4
   },
-  "hard_constraints": {
+  "conditional_reconstruction": {
+    "classification": "Model-derived values used for synthetic reproduction and bounded search; no incident RAM capture, savestate, or controller movie directly establishes them.",
     "pre_event_mario_y": -4207.0,
     "post_event_mario_y_if_ieee754_bit_24_clears": -1051.75,
     "instantaneous_y_delta": 3155.25,
@@ -29,11 +33,11 @@
       "z": [-306, 307]
     }
   },
-  "constraint_derivation": {
-    "speed_setting": "At clock entry the hand is within the stopped interval around 12; every supplied reconstruction TAS also enters with gTTCSpeedSetting=3.",
-    "spinner_identity": "The published -4207.0 pre-event Y is exactly -4233 + 26, the top plane of the spinner centered at (1102,-4233,1682). The video shows Mario at this spinner.",
-    "location": "The incident occurs at the spinner end beside the red coin centered at (800,-4400,1900). Exact X/Z are unavailable because no original controller movie or RAM capture exists.",
-    "action": "The 29.97 fps VOD shows a landing followed by an airborne state before the transition. Stream frame loss prevents one exact game-frame action assignment."
+  "reconstruction_derivation": {
+    "speed_setting": "Inferred from the clock hand appearing within the stopped interval around 12 and from the supplied reconstruction TAS corpus; no incident RAM value survives.",
+    "spinner_identity": "The published -4207.0 value equals -4233 + 26, the top plane of the spinner centered at (1102,-4233,1682), and the video appears consistent with that spinner. This is a model fit, not direct state evidence.",
+    "location": "The video appears to place the event near the spinner end beside the red coin centered at (800,-4400,1900). Exact X/Z are unavailable because no original controller movie or RAM capture exists.",
+    "action": "The lossy 29.97 fps VOD shows a landing followed by an airborne state before the transition. Stream frame loss prevents an exact game-update action assignment; ACT_FREEFALL and vertical velocity -20 are synthetic reconstruction inputs."
   },
   "bounded_search_envelope": {
     "mario_x": [700.0, 1250.0],
@@ -75,10 +79,41 @@
     "platform_contact_frames": 0,
     "assessment": "The movies are short variants from one pre-TTC savestate. They stop around the entrance floor near (1400,-4822,-520), never approach the incident spinner, and do not constrain incident X/Z, velocity, action, input, or platform-pointer state."
   },
+  "vod_rendered_candidate_fit": {
+    "target_source": "results/vod_fit_targets.json",
+    "render_source": "results/vod_fit_render_manifest.json",
+    "scene_source": "results/vod_render_scene_fit.json",
+    "motion_source": "results/vod_render_motion_fit.json",
+    "highlight_motion_source": "results/highlight_motion_audit.json",
+    "tested_scenarios": [
+      "reachable_no_mutation",
+      "synthetic_no_flip",
+      "synthetic_bit_clear"
+    ],
+    "scene_status": "indeterminate for all three scenarios",
+    "motion_status": "indeterminate for all three scenarios",
+    "highlight_material_improvement_gate_passed": false,
+    "baseline_to_highlight_reliable_localizations": [125, 110],
+    "assessment": "The three exact render sequences were not fitted to or excluded by the surviving pixels. Strict within-domain image diagnostics failed, but no known-positive VOD-to-Glide64mk2 transfer calibration exists; the Mario localizer also lacks an image-level cross-domain positive. The higher-resolution highlight aligned at offset -153 but failed its predeclared coverage-improvement gate, so it did not justify refitting the scenarios."
+  },
+  "r4300_multiply_hazard_audits": {
+    "route_source": "results/r4300_mul_hazard_audit.json",
+    "rom_source": "results/rom_mul_hazard_audit.json",
+    "route_observed_dynamic_transition_count": 80010,
+    "route_adjacent_multiply_pair_count": 0,
+    "rom_matched_text_instruction_count": 305935,
+    "rom_explicit_boundary_delay_word_count": 1,
+    "rom_static_pair_count": 0,
+    "rom_dynamic_status": "vacuous_no_static_sites",
+    "assessment": "The retained route has no adjacent multiply pair among its observed transitions. The matched JP ROM CPU .text scope plus one required boundary delay word contains no static back-to-back R4300 multiply-erratum pair under the recognized decoder, so no operand-value trace is needed for that static scope. Neither bounded result identifies or excludes a physical fault, and unrecognized control successors remain outside the static CFG proof."
+  },
   "evidence_limitations": [
     "No original .m64 exists.",
     "No original savestate or RAM capture exists.",
     "The legacy Google Drive package linked by the bounty is access-denied and could not be recovered from public archives.",
-    "The VOD is a lossy, composited 29.97 fps race stream and can omit N64 frames."
+    "The VOD is a lossy, composited 29.97 fps race stream and can omit N64 frames.",
+    "The exact pre-event Y word, spinner contact, TTC speed RAM value, action, velocity, camera, and game-update alignment are conditional reconstruction fields rather than direct observations.",
+    "The encoded-frame timing audit in results/vod_cadence_audit.json identifies frames on the YouTube timeline, not original N64 VIs or game updates.",
+    "The scene and Mario-motion fits of the three exact rendered scenarios remain indeterminate because calibrated cross-domain positives and dense transition localization are absent."
   ]
 }

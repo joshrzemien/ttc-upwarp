@@ -2,6 +2,7 @@
   "source_revision": "9921382a68bb0c865e5e45eb594d9c64db59b1af",
   "rom_md5": "85d61f5525af708c9f1e84dce6dc10e9",
   "target_transition": {
+    "classification": "Conditional reconstruction target; the exact incident RAM word, action, velocity, and TTC speed were not directly observed.",
     "pre_y": -4207.0,
     "post_y": -1051.75,
     "instantaneous_delta_y": 3155.25,
@@ -68,7 +69,7 @@
         "sm64/src/game/mario_actions_automatic.c:680-739",
         "sm64/src/game/mario_actions_submerged.c:1075-1089"
       ],
-      "incident_result": "These paths require a matching interaction or automatic/submerged action and a valid used-object pointer. None matches the observed freefall state or nearby red-coin/spinner objects; bounded multi-action searches cover the counterfactual states."
+      "incident_result": "These paths require a matching interaction or automatic/submerged action and a valid used-object pointer. None matches the reconstructed freefall state or nearby red-coin/spinner objects in the bounded synthetic searches."
     },
     {
       "family": "warp, spawn, cutscene, and area initialization",
@@ -80,6 +81,32 @@
       "incident_result": "These relocate Mario only with a level/area or cutscene transition, which is absent from the continuous incident footage and action state."
     },
     {
+      "family": "floor-null graphical-position fallback",
+      "sources": [
+        "sm64/src/game/mario.c:1313-1332",
+        "sm64/src/game/object_list_processor.c:218-277",
+        "sm64/src/engine/surface_collision.c:424-576",
+        "sm64/src/game/behavior_actions.c:146-157",
+        "sm64/src/game/behaviors/flame_mario.inc.c:33-49",
+        "sm64/src/game/mario_actions_airborne.c:675-677",
+        "sm64/src/game/mario_actions_moving.c:773-775",
+        "sm64/src/game/mario_actions_submerged.c:199-204",
+        "sm64/src/game/mario_actions_submerged.c:419-433"
+      ],
+      "incident_result": "When find_floor returns NULL, update_mario_geometry_inputs copies marioObj->header.gfx.pos into MarioState.pos and queries the floor again. Static analysis found no legal TTC-native path that can leave graphical Y approximately 3155.25 units above physical Y: TTC moving surfaces update their own object graphics, platform displacement updates MarioState, shell offsets are only +42/+45, and water-only offsets are at most +60 plus a type-level bob bound below 148. A renderer prevObj/flame transform and an ending-cutscene floor assignment can independently change graphical Y, but both are non-TTC/action-gated.",
+      "runtime_probe": {
+        "source": "results/floor_null_fallback_probe.json",
+        "positive_control_branch_hits": 1,
+        "synthetic_sweep_rows": 30,
+        "synthetic_sweep_branch_hits": 30,
+        "injected_incident_scale_propagation_delta_y": 3155.25,
+        "injected_one_update_delta_y": 3135.25,
+        "natural_controller_only_updates": 4096,
+        "natural_controller_only_branch_hits": 0,
+        "assessment": "The compiled JP libsm64 branch legally propagates an arbitrary injected graphical/physical position divergence. No branch execution occurred in the bounded stopped-clock controller-only bootstrap run. Neither result supplies a natural producer of the required divergence or an incident-compatible precursor."
+      }
+    },
+    {
       "family": "raw coordinate corruption",
       "sources": [
         "fuzzy64-mario-y-trace.patch",
@@ -88,5 +115,5 @@
       "incident_result": "Clearing bit 24 of the 32-bit IEEE-754 Y word produces y/4 exactly and reproduces the upper floor and landing trajectory. No byte or halfword writer to Mario Y appeared in native traced execution."
     }
   ],
-  "bounded_conclusion": "No enumerated legal writer family can produce the observed 3155.25-unit transition from the reconstructed incident state. A corrupted 32-bit coordinate value remains the only tested mechanism that reproduces the numeric transition and subsequent trajectory."
+  "bounded_conclusion": "The enumerated arithmetic, collision, platform, interaction, transition, and graphical-position writer paths do not produce the conditional 3155.25-unit target in the tested native domains or static matched-ROM source analysis. The floor-null graphical-position copy can propagate an injected incident-scale graphical/physical divergence, but the stopped-clock controller-only probe recorded zero branch executions in 4096 updates and no TTC-native producer of the required divergence was found. The unresolved independent graphical writers are non-TTC renderer-prevObj/flame and ending-cutscene cases. The three exact reachable, synthetic no-flip, and synthetic bit-clear render sequences have been compared with the VOD, but all scene and screen-space-motion results remain indeterminate because cross-domain positive controls and dense transition localization are absent. Direct mutation of MarioState Y is the only tested input that reproduces the conditional numeric transition and subsequent synthetic trajectory; graphical-position corruption through an unknown software or hardware initiator remains unproven."
 }

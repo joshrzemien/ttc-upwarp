@@ -1,8 +1,11 @@
 {
   "scope": {
     "incident": "DOTA_Teabag Tick Tock Clock upwarp",
-    "question_resolved": "What state transition produced the observed teleport, and is there evidence for a deterministic game-code path?",
-    "question_not_identifiable_from_available_evidence": "Which physical initiator, if any, caused the state transition on the original console?"
+    "question_conditionally_reconstructed": "Which 32-bit Mario Y mutation reproduces the published displacement and synthetic post-event trajectory?",
+    "questions_unresolved": [
+      "Whether the exact reconstructed Y word, spinner contact, action, velocity, camera, clock state, and mutation timing match the incident video.",
+      "Which software or physical initiator, if any, caused the historical state transition."
+    ]
   },
   "rom_and_model": {
     "game": "Super Mario 64 (Japan)",
@@ -14,6 +17,7 @@
     "mario_y_physical_address": "0x00339E40"
   },
   "coordinate_transition": {
+    "evidence_status": "Conditional model reconstruction; no incident RAM capture directly observed either word.",
     "published_pre_event_y": -4207.0,
     "pre_event_ieee754_word": "0xC5837800",
     "reconstructed_post_event_y": -1051.75,
@@ -26,6 +30,7 @@
     "exact_relation": "post_event_y = pre_event_y / 4"
   },
   "emulator_reproduction": {
+    "evidence_status": "Synthetic state injection at x=800,z=1900; this validates the conditional trajectory, not the incident state or initiator.",
     "reproduction_site": {
       "x": 800.0,
       "z": 1900.0,
@@ -71,7 +76,19 @@
       "native_writer_widths_observed": [
         "32-bit swc1"
       ],
-      "byte_or_halfword_writer_observed": false
+      "byte_or_halfword_writer_observed": false,
+      "floor_null_path": {
+        "name": "floor-null graphical-position fallback",
+        "source": "sm64/src/game/mario.c:1321-1330",
+        "behavior": "If find_floor returns NULL, MarioState pos is copied from marioObj graphical pos before a second floor query.",
+        "static_assessment": "No TTC-native writer of the approximately 3155.25-unit graphical/physical Y divergence was found.",
+        "runtime_probe": "results/floor_null_fallback_probe.json",
+        "synthetic_incident_scale_propagation_delta_y": 3155.25,
+        "synthetic_one_update_delta_y": 3135.25,
+        "natural_controller_only_updates": 4096,
+        "natural_controller_only_branch_hits": 0,
+        "scope_limit": "The positive control injects both an out-of-bounds physical position and a divergent graphical position. The natural result covers only a stopped-clock Wafel bootstrap/controller domain."
+      }
     },
     "freefall_path_bound": {
       "source_action": "ACT_FREEFALL (0x0100088C)",
@@ -123,19 +140,39 @@
       "failed_runs": 0,
       "unique_zero_error_bit": 24,
       "source": "results/single_bit_y_scan.json",
+      "source_sha256": "dadd2edc6111a9fcaa10fc40a9cc5f137d5739f9d8589d6d163cd2d5167d92d4",
+      "emulator_core_sha256": "91fcb50bde0200d69a7476d8e341b43e88458d0197b1b02bc468b1c642832b79",
       "scope_limit": "The comparison uses the synthetic event state and does not recover the incident's unknown complete state."
     },
     "reachable_one_update_search": {
       "route": "results/reachable_route_p078_r078_a+000.m64",
       "route_is_original_incident_movie": false,
-      "snapshot_restored_before_each_branch_after_first": true,
       "analog_equivalence_classes": 12269,
       "button_classes": 16,
       "candidate_count": 196304,
-      "largest_y_rise": 42.0,
-      "rise_at_least_500_count": 0,
-      "projected_final_state_count": 46287,
-      "source": "results/controller_equivalence_summary.json"
+      "historical_record": {
+        "source": "results/controller_equivalence_summary.json",
+        "recorded_campaign_complete": true,
+        "independently_reproducible_from_retained_inputs": false,
+        "historical_run_status": "not-determined",
+        "integrity_audit": "results/reachable_artifact_integrity.json"
+      },
+      "fresh_reassessment": {
+        "source": "results/reachable_campaign_reassessment.json",
+        "campaign_complete": true,
+        "result_count": 196304,
+        "missing_id_count": 0,
+        "duplicate_result_count": 0,
+        "complete_restore_evidence": true,
+        "largest_y_rise": 42.0,
+        "rise_at_least_500_count": 0,
+        "upper_platform_contact_count": 0,
+        "fresh_snapshot_gzip_valid": true,
+        "sequence_sha256": "763ce21139ef066b8560f1584c64b4d06d09958614f9a2ee9ee4e6907c538da4",
+        "full_aggregate_sha256": "d36c286e3b2c2536079ccc286aff37420e8a9e76fa884f46a9d2294090891856",
+        "tracked_checkout_self_contained": false,
+        "scope_limit": "The fresh state is hash-bound to the retained generated route and matching base savestate, but it is not VOD-fitted and the copyrighted savestate and full aggregate remain outside tracked files."
+      }
     },
     "mips_route_provenance": {
       "mario_y_write_count": 1270,
@@ -151,23 +188,253 @@
         "Fuzzy64 pure-interpreter semantics do not implement physical R4300i cache-coherency behavior or physical DRAM and bus faults.",
         "RDP plugin-side framebuffer writes that bypass core memory handlers are outside the trace patch."
       ]
+    },
+    "r4300_multiply_hazard_audits": {
+      "route_local": {
+        "source": "results/r4300_mul_hazard_audit.json",
+        "source_sha256": "c87447196356a22f485a92d56f9d859724a773185ce26f63e83fc6b62564d997",
+        "analyzer_sha256": "73087148df475c8965b3a7f8851f966f680780e26893bb4266eafef9fe515887",
+        "context_rows": 81280,
+        "observed_dynamic_transition_count": 80010,
+        "mul_s_count": 32,
+        "any_recorded_word_erratum_mul_s_count": 32,
+        "adjacent_multiply_pair_count": 0,
+        "candidate_erratum_pair_count": 0,
+        "minimum_any_recorded_word_erratum_to_following_multiply_dynamic_sequence_gap": 9,
+        "minimum_any_recorded_word_erratum_to_following_multiply_intervening_instruction_count": 8,
+        "active_lane_status": "unresolved_active_lane",
+        "scope_limit": "Only multiply pairs whose two dynamic sequence rows occur in retained 64-instruction Mario-Y-write rings are tested; gaps between rings remain unobserved. Conservative first-source eligibility uses either recorded low32 or high32 word because the separately captured ft single value does not resolve the active lane."
+      },
+      "rom_static": {
+        "source": "results/rom_mul_hazard_audit.json",
+        "source_sha256": "270c56a18358f900c736cc6c708cb8c802ea77e7db45c9f54f74fa0b2beee01c",
+        "analyzer_sha256": "35481de8912bfccfd6a0232f71eddb388d5e4741d91787125fed3bdad6d23db6",
+        "rom_md5": "85d61f5525af708c9f1e84dce6dc10e9",
+        "rom_sha256": "9cf7a80db321b07a8d461fe536c02c87b7412433953891cdec9191bfad2db317",
+        "matched_text_instruction_count": 305935,
+        "explicit_boundary_delay_word_count": 1,
+        "audited_instruction_count": 305936,
+        "all_multiply_count": 2815,
+        "first_fp_multiply_count": 2691,
+        "fp_multiply_in_delay_slot_count": 0,
+        "linear_pair_count": 0,
+        "conservative_cfg_pair_count": 0,
+        "union_candidate_count": 0,
+        "dynamic_status": "vacuous_no_static_sites",
+        "conclusion": "No static back-to-back R4300 multiply-erratum pair exists among the 305935 matched JP R4300 CPU .text words plus the one explicitly included boundary delay word; therefore operand-value and dynamic auditing are vacuous for that static scope.",
+        "scope_limit": "The recognized R4300i/MIPS III decoder and matched CPU .text scope do not cover unobserved route gaps, runtime-loaded or generated CPU code outside that scope, or physical hardware faults. The recorded source revision is a commit-ID match, not a clean-tree attestation."
+      }
+    },
+    "floor_null_graphical_position_audit": {
+      "static_source": "results/software_mechanism_bounds.json",
+      "runtime_source": "results/floor_null_fallback_probe.json",
+      "matched_source_revision": "9921382a68bb0c865e5e45eb594d9c64db59b1af",
+      "ttc_native_required_gap_producer_found": false,
+      "synthetic_positive_control_branch_hits": 1,
+      "synthetic_sweep_rows": 30,
+      "synthetic_incident_scale_propagation_delta_y": 3155.25,
+      "synthetic_one_update_delta_y": 3135.25,
+      "natural_controller_only_updates": 4096,
+      "natural_controller_only_branch_hits": 0,
+      "unresolved_independent_graphical_writers": [
+        "renderer prevObj/flame transform (non-TTC, matrix-dependent)",
+        "ending Peach cutscene floor-derived assignment (non-TTC)"
+      ],
+      "scope_limit": "The positive control proves legal propagation of an injected divergence; the bounded natural run does not establish global unreachability, an incident-compatible precursor, or a historical initiator."
     }
   },
+  "fresh_reassessment": {
+    "date_utc": "2026-08-12",
+    "evidence_layers": {
+      "direct_observation": "Lossy composited VOD pixels, encoded-frame timestamps, course/mission context, and visible screen-space motion.",
+      "conditional_reconstruction": "The C5837800-to-C4837800 mutation, spinner identity/contact, exact Y/X/Z, action, velocity, camera, clock state, and synthetic trajectory.",
+      "etiology": "Software propagation/corruption, R4300 execution anomaly, cache/bus/RDRAM transient, power/EMI, or deliberate edit remain hypotheses."
+    },
+    "vod_cadence": {
+      "source": "results/vod_cadence_audit.json",
+      "mapped_event_encoded_frames": [431, 432],
+      "mapped_event_source_times_seconds": [3481.4106, 3481.443966666667],
+      "scope_limit": "Encoded H.264 frames do not recover original N64 VIs or game updates."
+    },
+    "vod_rendered_candidate_fit": {
+      "target_manifest": "results/vod_fit_targets.json",
+      "target_manifest_sha256": "40d92c61235e00364fe6e5bbb367706ab8eda536c2f1de6268b442df38d7fe08",
+      "render_manifest": "results/vod_fit_render_manifest.json",
+      "render_manifest_sha256": "637f8fc62ca8f0cb7f6786da9f7de2dfc45e51bf3e82f672be617de600f2e140",
+      "target_encoded_frame_range": [340, 530],
+      "target_frame_counts": {
+        "pre_event": 91,
+        "event": 2,
+        "post_event": 98
+      },
+      "temporal_mapping": "Both analyzers use exact source-PTS offsets from encoded event frame 431 in nominal 1001-PTS units. The 2002-PTS gap from encoded 478 to 479 is retained; encoded indices are labels, not assumed source-frame ordinals or N64 VIs.",
+      "rendered_scenarios": [
+        "reachable_no_mutation",
+        "synthetic_no_flip",
+        "synthetic_bit_clear"
+      ],
+      "scene_fit": {
+        "source": "results/vod_render_scene_fit.json",
+        "source_sha256": "bbc1ea46c360bfc6507603895236ff683ad2cf602805fb3c997285e6bbc133d5",
+        "analyzer_sha256": "642ad980530a8fca699df4bd34773f65413366ba2c73d33ecef11cb069d4fd08",
+        "status_by_scenario": {
+          "reachable_no_mutation": "indeterminate",
+          "synthetic_no_flip": "indeterminate",
+          "synthetic_bit_clear": "indeterminate"
+        },
+        "best_weighted_score_by_scenario": {
+          "reachable_no_mutation": 0.60566342,
+          "synthetic_no_flip": 0.58322597,
+          "synthetic_bit_clear": 0.59129578
+        },
+        "strict_within_domain_positive_envelope": 0.89645392,
+        "strict_within_domain_threshold_pass_by_scenario": {
+          "reachable_no_mutation": false,
+          "synthetic_no_flip": false,
+          "synthetic_bit_clear": false
+        },
+        "joint_candidate_count_by_scenario": {
+          "reachable_no_mutation": 38475,
+          "synthetic_no_flip": 30618,
+          "synthetic_bit_clear": 30618
+        },
+        "scope_limit": "No known-positive VOD-to-Glide64mk2 pair calibrates renderer, lighting, and texture transfer. The low cross-domain scores cannot distinguish that domain shift from scene, camera, or state mismatch, so they are diagnostic rather than rejections."
+      },
+      "motion_fit": {
+        "source": "results/vod_render_motion_fit.json",
+        "source_sha256": "327822647080c9d9ac30eba9315e8cee2e7ee1526c78807d6813819c843b3185",
+        "analyzer_sha256": "bca8a68ccbcc66522aa42ec49cd22be0a817e12ce4946d56421faac2590b2fa5",
+        "vod_reliable_localizations": {
+          "total": 125,
+          "of": 191,
+          "pre_event": 88,
+          "event": 2,
+          "transition_433_499": 13,
+          "landing_500_530": 22,
+          "failed": 66
+        },
+        "searched_mapping_count_per_scenario": 560,
+        "coverage_eligible_mapping_count_by_scenario": {
+          "reachable_no_mutation": 169,
+          "synthetic_no_flip": 33,
+          "synthetic_bit_clear": 0
+        },
+        "status_by_scenario": {
+          "reachable_no_mutation": "indeterminate",
+          "synthetic_no_flip": "indeterminate",
+          "synthetic_bit_clear": "indeterminate"
+        },
+        "scope_limit": "The fixed red/blue localizer has no image-level cross-domain positive control. Score failures are diagnostic only, repeated emulator screenshots count once per emitted observation, and no screen-space result identifies Mario RAM, a mutation mechanism, or original-N64 timing."
+      },
+      "highlight_motion_audit": {
+        "source": "results/highlight_motion_audit.json",
+        "source_sha256": "79d9190b7985cf479e64c2a3432d07d7b038af42891075e221a495f911a0e354",
+        "analyzer_sha256": "cab9089bd765feeae12c8009335e546ca722822b85cfdc979da5607d96ecf196",
+        "highlight_media_sha256": "c268f1ae51a4dbd64b4e394199b31e04b3cd02441489404c7c046870b47bd723",
+        "highlight_decoded_frames": 784,
+        "highlight_dimensions": [1920, 1344],
+        "alignment": {
+          "formula": "highlight_decoded_index = target_timeline_index + integer_offset; target_timeline_index is derived from source PTS in nominal 1001-tick units",
+          "searched_full_row_offset_range": [-340, 252],
+          "searched_offset_count": 593,
+          "best_offset": -153,
+          "best_mean_squared_feature_error": 5.62212137,
+          "runner_up_offset": -152,
+          "runner_up_mean_squared_feature_error": 7.444755693,
+          "runner_up_minus_best_margin": 1.822634323,
+          "source_pts_delta_histogram": {
+            "1001": 189,
+            "2002": 1
+          },
+          "monotone_refinement_radius": 2
+        },
+        "reliable_localizations": {
+          "baseline_total": 125,
+          "highlight_total": 110,
+          "baseline": {
+            "pre_event": 88,
+            "event": 2,
+            "transition_433_499": 13,
+            "landing_500_530": 22
+          },
+          "highlight": {
+            "pre_event": 75,
+            "event": 2,
+            "transition_433_499": 11,
+            "landing_500_530": 22
+          },
+          "newly_recovered": {
+            "pre_event": 2,
+            "event": 0,
+            "transition_433_499": 1,
+            "landing_500_530": 0
+          },
+          "lost": {
+            "pre_event": 15,
+            "event": 0,
+            "transition_433_499": 3,
+            "landing_500_530": 0
+          }
+        },
+        "material_improvement_gate": {
+          "fixed_before_run": true,
+          "required_transition_delta": 10,
+          "required_landing_delta": 5,
+          "required_no_pre_or_event_regression": true,
+          "observed_transition_delta": -2,
+          "observed_landing_delta": 0,
+          "observed_pre_delta": -13,
+          "observed_event_delta": 0,
+          "passed": false
+        },
+        "status": "failed_material_improvement_gate",
+        "scope_limit": "This is an evidence-quality failure, not a rejection of any emulator scenario. The two lossy encodes and fixed color/temporal localizer support no game-state, mechanism, RAM, emulator-scenario, or N64-VI inference; ambiguous and failed localizations remain null."
+      },
+      "assessment": "None of the three exact rendered scenarios is confirmed or excluded by this visual fit. The higher-resolution highlight aligned deterministically but failed its predeclared localization-coverage improvement gate, so the three scenarios were not refitted. These results narrow the tested image and motion domains but do not fit the incident state."
+    },
+    "artifact_integrity": {
+      "source": "results/reachable_artifact_integrity.json",
+      "historical_retained_artifacts": {
+        "valid_snapshots": ["p078_r078_vi520.m64p"],
+        "truncated_snapshots": [
+          "p078_r078_vi390.m64p",
+          "p078_r078_vi460.m64p",
+          "p078_r078_vi475.m64p"
+        ],
+        "one_update_result_independently_reproducible": false,
+        "historical_run_status": "not-determined"
+      },
+      "fresh_campaign": {
+        "source": "results/reachable_campaign_reassessment.json",
+        "snapshot_gzip_valid": true,
+        "campaign_complete": true,
+        "candidate_count": 196304,
+        "result_count": 196304,
+        "full_aggregate_and_logs_hash_bound": true,
+        "remote_artifact_manifest_sha256": "a8eff996dd364cee3c2cd54b361ec610d0818959140617096eb10eb34d8a926d"
+      }
+    },
+    "highest_information_next_experiment": "The higher-resolution highlight failed its predeclared localization-coverage improvement gate, so do not refit the three rendered scenarios from it. Next acquire an incident-compatible savestate or calibrated cross-domain VOD-to-Glide64mk2 positive pair; without one, additional rendering and visual-fit searches cannot discriminate state mismatch from renderer/encode shift. If hardware etiology remains in scope, test other CPU/cache/RDRAM fault classes on original hardware or a cycle-accurate model; the documented back-to-back multiply erratum has no static site in the matched CPU-code scope."
+  },
   "conclusion": {
-    "result": "The observed upwarp is best explained by Mario's 32-bit IEEE-754 Y value changing from 0xC5837800 (-4207.0) to 0xC4837800 (-1051.75): a clear of bit 24 that divides Y by four and raises Mario by 3155.25 units.",
-    "what_is_solved": "That state mutation reproduces the numeric displacement, the new floor and ceiling, the complete falling trajectory, and the upper landing with matching native-Wafel and N64-emulator states and timing.",
-    "normal_gameplay_mechanic_assessment": "No legal game-code path was found. The exact freefall path cannot invoke the ceiling-hang snap; the stopped spinner contributes zero vertical displacement; stale-platform reuse is unreachable; and 484122309 bounded native frame evaluations produced no rise of even 500 units.",
+    "result": "Clearing bit 24 of 0xC5837800 produces 0xC4837800, divides Y by four, and reproduces the published 3155.25-unit displacement in the synthetic model. This is the strongest conditional numeric reconstruction, not a directly observed incident RAM transition.",
+    "what_is_solved": "Given the reconstructed input state, that injected mutation reproduces the numeric displacement, recomputed floor and ceiling, falling trajectory, and upper landing with matching native-Wafel and N64-emulator states.",
+    "normal_gameplay_mechanic_assessment": "No tested natural game-code path produced the conditional target. The floor-null positive control propagated an injected incident-scale graphical/physical divergence, but static analysis found no TTC-native producer and a 4096-update stopped-clock controller-only run recorded no branch hit. A fresh complete 196304-candidate one-update campaign again found no rise of at least 500 units. Normal gameplay is still not excluded because scene and screen-space-motion fits of the exact reachable, synthetic no-flip, and synthetic bit-clear renders are all indeterminate and do not cover other incident states.",
     "deterministic_exploit_status": "No reproducible normal-gameplay trigger or start-to-finish .m64 was found. This analysis does not claim the historical bounty.",
-    "mechanism_confidence": "high for corruption of the coordinate value or its data path",
+    "mechanism_confidence": "high that the injected bit clear reproduces the conditional model; undetermined for the historical incident mechanism",
     "initiating_agent": "not identifiable from the surviving video, software, or hardware evidence",
     "initiator_assessment": [
       {
         "explanation": "Transient hardware/data-path upset in RDRAM, CPU cache/register state, a bus, power, or EMI",
-        "assessment": "best fit to a one-bit value change, but not directly evidenced"
+        "assessment": "compatible with a one-bit value change but not directly evidenced and not currently distinguishable from uncovered software propagation or corruption"
       },
       {
-        "explanation": "An undiscovered software memory-corruption write",
-        "assessment": "not found in the matched-source audit, traces, replays, platform proof, or bounded searches; logically possible"
+        "explanation": "Documented R4300 back-to-back multiply erratum",
+        "assessment": "no static pair exists among the 305935 matched JP R4300 CPU .text words plus one required boundary delay word; this bounded exclusion does not cover runtime-loaded or generated code outside that scope or other physical CPU faults"
+      },
+      {
+        "explanation": "An undiscovered software propagation or memory-corruption path",
+        "assessment": "logically possible, but the floor-null positive control requires injected graphical/physical divergence, no TTC-native producer of that divergence was found, and the bounded natural runtime probe recorded no branch execution"
       },
       {
         "explanation": "Deliberate memory editing or edited footage",
