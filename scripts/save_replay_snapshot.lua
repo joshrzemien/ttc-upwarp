@@ -69,7 +69,7 @@ function Fuzzer.update(_)
         if remaining_vis <= 0 then
             print(string.format("SNAPSHOT_DONE,vi=%d,polls=%d,timer=%d", vi, polls, u32(GLOBAL_TIMER)))
             io.stdout:flush()
-            os.exit(0)
+            Fuzzer:stop()
         end
     end
 end

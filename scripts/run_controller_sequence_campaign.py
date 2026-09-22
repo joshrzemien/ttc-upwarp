@@ -13,7 +13,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-DEFAULT_ROOT = Path("/home/zman/projects/labs/ttc_upwarp")
+DEFAULT_ROOT = Path(__file__).resolve().parents[1]
 
 
 def sha256(path: Path) -> str:
@@ -55,20 +55,25 @@ def main() -> None:
     parser.add_argument("--workers", type=int, default=min(32, os.cpu_count() or 1))
     parser.add_argument("--timeout", type=float, default=600.0)
     parser.add_argument("--root", type=Path, default=DEFAULT_ROOT)
-    parser.add_argument("--movie", type=Path, default=Path("/tmp/tas26_jp.m64"))
+    parser.add_argument("--movie", type=Path)
     parser.add_argument("--rom", type=Path)
     parser.add_argument("--emulator", type=Path)
     parser.add_argument("--core", type=Path)
     parser.add_argument("--rsp", type=Path)
     parser.add_argument("--lua", type=Path)
+    parser.add_argument("--data-dir", type=Path)
+    parser.add_argument("--config-dir", type=Path)
     args = parser.parse_args()
 
     root = args.root.resolve()
-    rom = args.rom or root / "emulator/sm64.jp.z64"
-    emulator = args.emulator or root / "Fuzzy64/mupen64plus-ui-console/projects/unix/mupen64plus"
-    core = args.core or root / "Fuzzy64/mupen64plus-core/projects/unix/libmupen64plus.so.2.0.0"
-    rsp = args.rsp or root / "Fuzzy64/mupen64plus-rsp-hle/projects/unix/mupen64plus-rsp-hle.so"
-    lua = args.lua or root / "scripts/controller_sequence_scan.lua"
+    rom = (args.rom or root / "emulator/sm64.jp.z64").expanduser().resolve()
+    emulator = (args.emulator or root / "emulator/bin/mupen64plus").expanduser().resolve()
+    core = (args.core or root / "emulator/lib/libmupen64plus.so.2.0.0").expanduser().resolve()
+    rsp = (args.rsp or root / "emulator/lib/mupen64plus/mupen64plus-rsp-hle.so").expanduser().resolve()
+    lua = (args.lua or root / "scripts/controller_sequence_scan.lua").expanduser().resolve()
+    args.movie = (args.movie or root / "TTC-Upwarp-Overlay/Tas Attempts/tas26.m64").expanduser().resolve()
+    data_dir = (args.data_dir or root / "emulator/share/mupen64plus").expanduser().resolve()
+    config_dir = (args.config_dir or root / "emulator/config").expanduser().resolve()
 
     required = [args.sequences, args.snapshot, args.movie, rom, emulator, core, rsp, lua]
     missing = [str(path) for path in required if not path.exists()]
@@ -114,6 +119,8 @@ def main() -> None:
             )
             command = [
                 str(emulator),
+                "--gfx", "dummy", "--audio", "dummy", "--input", "dummy", "--nosaveoptions",
+                "--datadir", str(data_dir), "--configdir", str(config_dir),
                 "--nospeedlimit",
                 "--emumode",
                 "0",
@@ -132,6 +139,7 @@ def main() -> None:
                 run = subprocess.run(
                     command,
                     env=env,
+                    cwd=root,
                     capture_output=True,
                     text=True,
                     timeout=args.timeout,

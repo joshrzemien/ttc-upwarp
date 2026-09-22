@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "wafel_jp_dll.h"
+
 typedef void (*game_fn)(void);
 typedef float (*collision_fn)(float, float, float, void **);
 
@@ -194,9 +196,8 @@ int main(int argc, char **argv) {
     }
     uint64_t random_state = seed == 0 ? UINT64_C(0x9E3779B97F4A7C15) : seed;
 
-    HMODULE module = LoadLibraryA(module_path);
+    HMODULE module = load_wafel_jp_dll(module_path);
     if (module == NULL) {
-        fprintf(stderr, "LoadLibrary failed for %s (error %lu)\n", module_path, GetLastError());
         return 1;
     }
 

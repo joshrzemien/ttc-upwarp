@@ -11,3 +11,13 @@ __pycache__/
 *.m64p.st
 results/reachable_reassessment_*/
 results/floor_null_fallback_probe_*/
+.venv/
+/sm64/
+/wafel/
+/Fuzzy64/
+/TTC-Upwarp-Overlay/
+/.tools/
+/emulator/
+/media/
+/results/local/
+/results/wafel_fuzz/local_*/

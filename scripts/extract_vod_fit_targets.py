@@ -7,11 +7,11 @@ its decoded RGB frames have a unique contiguous hash alignment to the audited
 prefix; the overlapping extension frame is then de-duplicated.  All rows remain
 encoded-video observations.  They are not N64 VI or game-update evidence.
 
-The default extraction writes PNGs to a temporary local staging directory,
-retains the two bounded inputs and PNGs on the requested remote host, and emits
-a self-contained JSON manifest containing local/remote hashes and exact PTS.
-Use ``--validate-only`` to re-check a manifest, including remote PNG hashes and
-PNG decoding/dimensions.
+The default extraction retains the two bounded inputs and PNGs locally and emits
+a self-contained JSON manifest containing hashes and exact PTS. Remote retention
+requires an explicit ``--remote-host``. Historical ``remote_*`` manifest fields
+remain provenance labels, not instructions to contact a host. Use
+``--validate-only --path-map OLD=LOCAL`` to verify relocated historical assets.
 """
 from __future__ import annotations
 
@@ -33,11 +33,8 @@ from pathlib import Path
 from typing import Any, Iterable
 
 
-EXPECTED_AUDIT_SHA256 = "92f7b14066cae3d6001a3ba8a1a6e6025627b17d4cc624954dea8cb664edb763"
-EXPECTED_AUDIT_SIZE = 1017347
 DEFAULT_CROP = (0, 145, 340, 215)
 DEFAULT_EVENT = (Fraction("3481.4"), Fraction("3481.47"))
-DEFAULT_SOURCE_OFFSET = Fraction(104010887, 30000)
 DEFAULT_START_INDEX = 340
 DEFAULT_POST_END_INDEX = 530
 LOW_RESOLUTION = (32, 18)
@@ -45,8 +42,8 @@ NEAR_REPEAT_LUMA_MAE_MAX = 2
 NEAR_REPEAT_DHASH_HAMMING_MAX = 24
 SCENE_CHANGE_LUMA_MAE_MIN = 20
 SCENE_CHANGE_DHASH_HAMMING_MIN = 192
-REMOTE_PROJECT = "/home/zman/projects/labs/ttc_upwarp"
-REMOTE_RESULT_DIR = "results/vod_fit_targets_20260812"
+ROOT = Path(__file__).resolve().parents[1]
+RESULT_DIR_DEFAULT = ROOT / "media/vod_fit_targets"
 REMOTE_AUDITED_NAME = "audited_vod_segment_format134.mp4"
 REMOTE_EXTENSION_NAME = "same_source_vod_extension_format134.mp4"
 
@@ -113,6 +110,40 @@ def parse_fraction(value: str) -> Fraction:
     if result.denominator <= 0:
         raise argparse.ArgumentTypeError(f"invalid rational {value!r}")
     return result
+
+
+def parse_path_map(value: str) -> tuple[Path, Path]:
+    """Parse a manifest path-prefix relocation without rewriting provenance."""
+    original, separator, local = value.partition("=")
+    if not separator or not original or not local:
+        raise argparse.ArgumentTypeError("expected OLD_PREFIX=LOCAL_PREFIX")
+    return Path(original), Path(local).expanduser().resolve()
+
+
+def resolve_asset_path(source_path: str, path_maps: Iterable[tuple[Path, Path]] = ()) -> Path:
+    source = Path(source_path)
+    for original, local in sorted(path_maps, key=lambda pair: len(pair[0].parts), reverse=True):
+        if source.is_relative_to(original):
+            return (local / source.relative_to(original)).resolve()
+    return (source if source.is_absolute() else ROOT / source).resolve()
+
+
+def read_asset_bytes(
+    source_path: str,
+    remote_host: str | None = None,
+    path_maps: Iterable[tuple[Path, Path]] = (),
+) -> tuple[bytes, dict[str, Any]]:
+    """Read local bytes first; only explicitly authorized SSH may fetch a miss."""
+    local = resolve_asset_path(source_path, path_maps)
+    if local.is_file():
+        return local.read_bytes(), {"transport": "local", "path": str(local)}
+    if remote_host is None:
+        raise FileNotFoundError(
+            f"missing manifest asset: {source_path}; resolved local path: {local}. "
+            "Supply --path-map OLD_PREFIX=LOCAL_PREFIX for relocated assets."
+        )
+    result = run(["ssh", remote_host, f"cat -- {shlex_quote(source_path)}"], text=False)
+    return bytes(result.stdout), {"transport": "ssh", "host": remote_host, "path": source_path}
 
 
 def run(command: list[str], *, text: bool = True) -> subprocess.CompletedProcess[Any]:
@@ -476,8 +507,16 @@ def load_audit(audit_path: Path) -> dict[str, Any]:
     rows = audit.get("observations", {}).get("all_decoded_frames")
     if not isinstance(rows, list) or len(rows) < 480:
         raise ExtractionError("audit lacks the expected 480 decoded rows")
-    if audit.get("input", {}).get("sha256") != EXPECTED_AUDIT_SHA256:
-        raise ExtractionError("audit input SHA-256 does not match the audited format-134 hash")
+    source = audit.get("input", {})
+    digest = source.get("sha256")
+    size = source.get("size_bytes")
+    if not isinstance(digest, str) or len(digest) != 64 or any(char not in "0123456789abcdef" for char in digest):
+        raise ExtractionError("audit input lacks a valid SHA-256 binding")
+    if not isinstance(size, int) or isinstance(size, bool) or size <= 0:
+        raise ExtractionError("audit input lacks a positive size_bytes binding")
+    retrieval = audit.get("retrieval", {})
+    if retrieval.get("source_id") != "TTh3LY-5KKg" or str(retrieval.get("format_id")) != "134":
+        raise ExtractionError("audit must identify the same-source format-134 VOD")
     return audit
 
 
@@ -612,30 +651,44 @@ def shlex_quote(value: str) -> str:
     return "'" + value.replace("'", "'\\''") + "'"
 
 
-def retain_remote(
-    host: str,
-    remote_dir: str,
+def retain_assets(
+    host: str | None,
+    result_dir: str,
     audited_path: Path,
     extension_path: Path,
     staging: Path,
     png_names: list[str],
 ) -> tuple[dict[str, Any], dict[str, dict[str, Any]]]:
-    remote_run(host, ["mkdir", "-p", remote_dir])
-    source_remote: dict[str, Any] = {}
-    for local, name in ((audited_path, REMOTE_AUDITED_NAME), (extension_path, REMOTE_EXTENSION_NAME)):
-        destination = f"{host}:{remote_dir}/{name}"
-        run(["scp", "-q", str(local), destination])
-        remote_hash = remote_sha_sizes(host, remote_dir, [name])[name]
-        source_remote[name] = {
-            "path": f"{remote_dir}/{name}",
-            "sha256": remote_hash["sha256"],
-            "size_bytes": remote_hash["size_bytes"],
+    sources = ((audited_path, REMOTE_AUDITED_NAME), (extension_path, REMOTE_EXTENSION_NAME))
+    if host is None:
+        destination = Path(result_dir)
+        destination.mkdir(parents=True, exist_ok=True)
+        for source, name in (*sources, *((staging / name, name) for name in png_names)):
+            target = destination / name
+            if source.resolve() != target.resolve():
+                shutil.copyfile(source, target)
+        source_records = {
+            name: {"path": str(destination / name), "sha256": sha256_file(destination / name), "size_bytes": (destination / name).stat().st_size}
+            for _, name in sources
         }
-    png_paths = [str(staging / name) for name in png_names]
-    if png_paths:
-        run(["scp", "-q", *png_paths, f"{host}:{remote_dir}/"])
-    png_remote = remote_sha_sizes(host, remote_dir, png_names)
-    return source_remote, png_remote
+        png_records = {
+            name: {"sha256": sha256_file(destination / name), "size_bytes": (destination / name).stat().st_size}
+            for name in png_names
+        }
+    else:
+        remote_run(host, [f"mkdir -p -- {shlex_quote(result_dir)}"])
+        source_records = {}
+        for source, name in sources:
+            run(["scp", "-q", str(source), f"{host}:{result_dir}/{name}"])
+            observed = remote_sha_sizes(host, result_dir, [name])[name]
+            source_records[name] = {"path": f"{result_dir}/{name}", **observed}
+        if png_names:
+            run(["scp", "-q", *[str(staging / name) for name in png_names], f"{host}:{result_dir}/"])
+        png_records = remote_sha_sizes(host, result_dir, png_names)
+    for source, name in sources:
+        if source_records[name]["sha256"] != sha256_file(source) or source_records[name]["size_bytes"] != source.stat().st_size:
+            raise ExtractionError(f"retained source differs from input: {name}")
+    return source_records, png_records
 
 
 def validate_png_file(path: Path, expected_width: int, expected_height: int, expected_rgb_hash: str) -> dict[str, Any]:
@@ -661,6 +714,7 @@ def validate_manifest_data(
     *,
     staging_dir: Path | None = None,
     remote_host: str | None = None,
+    path_maps: Iterable[tuple[Path, Path]] = (),
 ) -> dict[str, Any]:
     rows = manifest.get("targets")
     if not isinstance(rows, list):
@@ -708,11 +762,13 @@ def validate_manifest_data(
         name = Path(str(row["remote_png_path"])).name
         if name not in remote_pngs:
             raise ExtractionError(f"remote PNG metadata missing {name}")
-        if staging_dir is not None:
-            local = staging_dir / name
+        if staging_dir is not None or remote_host is None:
+            local = staging_dir / name if staging_dir is not None else resolve_asset_path(str(row["remote_png_path"]), path_maps)
             check = validate_png_file(local, 340, 215, str(row["gameplay_crop_sha256"]))
             if check["sha256"] != remote_pngs[name]["sha256"] or check["size_bytes"] != remote_pngs[name]["size_bytes"]:
                 raise ExtractionError(f"local PNG metadata mismatch for {name}")
+            if check["sha256"] != row["png_sha256"] or check["size_bytes"] != row["png_size_bytes"]:
+                raise ExtractionError(f"target row PNG metadata mismatch for {name}")
             local_checks += 1
     remote_checks = 0
     if remote_host is not None:
@@ -736,17 +792,19 @@ def validate_manifest_data(
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Extract and validate hash-bound VOD fit target PNGs")
-    parser.add_argument("--input-video", type=Path, default=Path("/tmp/ttc-vod-cadence-media/vod_segment.mp4"))
-    parser.add_argument("--extension-video", type=Path, default=Path("/tmp/vod_extended.mp4"))
-    parser.add_argument("--audit", type=Path, default=Path("results/vod_cadence_audit.json"))
-    parser.add_argument("--output", type=Path, default=Path("results/vod_fit_targets.json"))
-    parser.add_argument("--remote-host", default="roach")
-    parser.add_argument("--remote-result-dir", default=f"{REMOTE_PROJECT}/{REMOTE_RESULT_DIR}")
+    parser.add_argument("--input-video", type=Path, default=ROOT / "media/vod_segment.mp4")
+    parser.add_argument("--extension-video", type=Path, default=ROOT / "media/vod_extended.mp4")
+    parser.add_argument("--audit", type=Path, default=ROOT / "results/vod_cadence_audit.json", help="bind input hash, size, decoded RGB and PTS to this audit")
+    parser.add_argument("--output", type=Path, default=ROOT / "media/vod_fit_targets.json")
+    parser.add_argument("--result-dir", type=Path, default=RESULT_DIR_DEFAULT, help="permanent local source/PNG retention directory")
+    parser.add_argument("--remote-host", help="explicit opt-in to SSH retention or validation")
+    parser.add_argument("--remote-result-dir", help="absolute destination on --remote-host")
+    parser.add_argument("--path-map", action="append", type=parse_path_map, default=[], metavar="OLD=LOCAL", help="relocate historical manifest paths during --validate-only; repeatable")
     parser.add_argument("--start-index", type=int, default=DEFAULT_START_INDEX)
     parser.add_argument("--post-end-index", type=int, default=DEFAULT_POST_END_INDEX)
     parser.add_argument("--event-start", type=parse_fraction, default=DEFAULT_EVENT[0])
     parser.add_argument("--event-end", type=parse_fraction, default=DEFAULT_EVENT[1])
-    parser.add_argument("--source-offset", type=parse_fraction, default=DEFAULT_SOURCE_OFFSET)
+    parser.add_argument("--source-offset", type=parse_fraction, help="must match the supplied audit; defaults to its exact verified source offset")
     parser.add_argument("--validate-only", action="store_true")
     parser.add_argument("--manifest", type=Path, default=None)
     parser.add_argument("--staging-dir", type=Path, default=None)
@@ -761,13 +819,26 @@ def extract(args: argparse.Namespace) -> dict[str, Any]:
         raise ExtractionError("target range must include audited event frames 431/432")
     if args.event_start >= args.event_end:
         raise ExtractionError("event interval must be increasing")
+    result_dir = args.remote_result_dir if args.remote_host else str(args.result_dir.expanduser().resolve())
     audit = load_audit(args.audit)
+    mapping = audit["observations"].get("source_time_mapping", {})
+    if mapping.get("exact_for_encoded_source_timeline") is not True:
+        raise ExtractionError("audit lacks an exact verified source timeline mapping")
+    try:
+        audited_offset = Fraction(mapping["source_timeline_offset_rational_seconds"])
+    except (KeyError, TypeError, ValueError, ZeroDivisionError) as exc:
+        raise ExtractionError("audit lacks an exact rational source timeline offset") from exc
+    if args.source_offset is not None and args.source_offset != audited_offset:
+        raise ExtractionError("--source-offset disagrees with the supplied audit")
+    args.source_offset = audited_offset
     if not args.input_video.is_file() or not args.extension_video.is_file():
         raise ExtractionError("both exact audited input and same-source extension are required")
     audited_hash = sha256_file(args.input_video)
-    if audited_hash != EXPECTED_AUDIT_SHA256 or args.input_video.stat().st_size != EXPECTED_AUDIT_SIZE:
+    expected_hash = audit["input"]["sha256"]
+    expected_size = audit["input"]["size_bytes"]
+    if audited_hash != expected_hash or args.input_video.stat().st_size != expected_size:
         raise ExtractionError(
-            f"exact audited input mismatch: {audited_hash}/{args.input_video.stat().st_size} != {EXPECTED_AUDIT_SHA256}/{EXPECTED_AUDIT_SIZE}"
+            f"exact audited input mismatch: {audited_hash}/{args.input_video.stat().st_size} != {expected_hash}/{expected_size}"
         )
     crop = DEFAULT_CROP
     _, audited_rows, _ = build_input_rows(
@@ -873,7 +944,7 @@ def extract(args: argparse.Namespace) -> dict[str, Any]:
                 "crop_x": crop[0],
                 "crop_y": crop[1],
                 "png_filename": png_name,
-                "remote_png_path": f"{args.remote_result_dir}/{png_name}",
+                "remote_png_path": f"{result_dir}/{png_name}",
                 "png_sha256": local_info["sha256"],
                 "png_size_bytes": local_info["size_bytes"],
                 "originating_input": row["originating_input"],
@@ -882,9 +953,9 @@ def extract(args: argparse.Namespace) -> dict[str, Any]:
             }
         )
         manifest_rows.append(row_public)
-    source_remote, remote_png = retain_remote(
+    source_remote, remote_png = retain_assets(
         args.remote_host,
-        args.remote_result_dir,
+        result_dir,
         args.input_video,
         args.extension_video,
         staging,
@@ -931,7 +1002,7 @@ def extract(args: argparse.Namespace) -> dict[str, Any]:
                 "format_id": "134",
                 "source_id": "TTh3LY-5KKg",
                 "source_url": "https://www.youtube.com/watch?v=TTh3LY-5KKg",
-                "retrieval_command": "yt-dlp --ignore-config --no-warnings --no-playlist --format 134 --download-sections '*3467.0-3483.0' --output '/tmp/ttc-vod-cadence-media/vod_segment.%(ext)s' --no-part 'https://www.youtube.com/watch?v=TTh3LY-5KKg'",
+                "retrieval_command": audit["retrieval"].get("command"),
                 "audit_sha256": audit.get("input", {}).get("sha256"),
                 "audit_size_bytes": audit.get("input", {}).get("size_bytes"),
             },
@@ -945,7 +1016,8 @@ def extract(args: argparse.Namespace) -> dict[str, Any]:
                 "format_id": "134",
                 "source_id": "TTh3LY-5KKg",
                 "source_url": "https://www.youtube.com/watch?v=TTh3LY-5KKg",
-                "retrieval_command": "yt-dlp --ignore-config --no-warnings --no-playlist --format 134 --download-sections '*3467-3488' --output '/tmp/vod_extended.%(ext)s' --no-part 'https://www.youtube.com/watch?v=TTh3LY-5KKg'",
+                "retrieval_command": None,
+                "retrieval_note": "Caller-supplied extension; acquisition command not asserted. Source continuity is checked by the unique decoded-RGB/PTS alignment.",
                 "purpose": "same-source post-event continuation; not mixed with another VOD",
             },
             "cadence_audit": {
@@ -1025,7 +1097,9 @@ def extract(args: argparse.Namespace) -> dict[str, Any]:
             "extension_appended_output_encoded_index_start": len(audited_rows),
             "note": "The extension contains an extra PTS-479 frame omitted by the audited section edit; ext frame 480 is the unique RGB-identical overlap with audited row 479 and is not emitted twice.",
         },
-        "remote_result_dir": args.remote_result_dir,
+        "storage": {"transport": "ssh" if args.remote_host else "local", "host": args.remote_host, "result_dir": result_dir},
+        "remote_host": args.remote_host,
+        "remote_result_dir": result_dir,
         "remote_pngs": remote_png,
         "targets": manifest_rows,
         "limitations": [
@@ -1037,7 +1111,9 @@ def extract(args: argparse.Namespace) -> dict[str, Any]:
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    validation = validate_manifest_data(manifest, staging_dir=staging, remote_host=args.remote_host)
+    validation = validate_manifest_data(
+        manifest, staging_dir=staging if args.remote_host else Path(result_dir), remote_host=args.remote_host
+    )
     manifest["validation"] = validation
     args.output.write_text(json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     if not args.keep_staging and args.staging_dir is None:
@@ -1046,7 +1122,12 @@ def extract(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def main() -> int:
-    args = build_parser().parse_args()
+    parser = build_parser()
+    args = parser.parse_args()
+    if args.remote_host and not args.validate_only and not args.remote_result_dir:
+        parser.error("--remote-host extraction requires --remote-result-dir")
+    if args.remote_result_dir and not args.remote_host:
+        parser.error("--remote-result-dir requires --remote-host")
     if args.validate_only:
         manifest_path = args.manifest or args.output
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -1056,7 +1137,7 @@ def main() -> int:
             names = [Path(str(row["remote_png_path"])).name for row in manifest["targets"]]
             remote_dir = str(manifest["remote_result_dir"])
             run(["scp", "-q", *[f"{args.remote_host}:{remote_dir}/{name}" for name in names], str(staging)])
-        result = validate_manifest_data(manifest, staging_dir=staging, remote_host=args.remote_host)
+        result = validate_manifest_data(manifest, staging_dir=staging, remote_host=args.remote_host, path_maps=args.path_map)
         if staging is not None and args.staging_dir is None:
             shutil.rmtree(staging, ignore_errors=True)
         print(json.dumps(result, indent=2, sort_keys=True))

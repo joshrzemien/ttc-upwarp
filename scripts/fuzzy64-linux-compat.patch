@@ -1,0 +1,781 @@
+diff --git a/mupen64plus-core/projects/unix/Makefile b/mupen64plus-core/projects/unix/Makefile
+index fc08f57..3e03f5d 100755
+--- a/mupen64plus-core/projects/unix/Makefile
++++ b/mupen64plus-core/projects/unix/Makefile
+@@ -130,7 +130,7 @@ endif
+ OPTFLAGS ?= -O3 -flto
+ WARNFLAGS ?= -Wall -Wno-unused-function
+ CFLAGS += $(OPTFLAGS) $(WARNFLAGS) -ffast-math -fno-strict-aliasing -fvisibility=hidden -I../../src -I../../src/asm_defines -DM64P_PARALLEL
+-CXXFLAGS += -fvisibility-inlines-hidden
++CXXFLAGS += -fvisibility-inlines-hidden -std=gnu++11
+ LDLIBS +=  -lm
+ 
+ # Since we are building a shared library, we must compile with -fPIC on some architectures
+@@ -246,6 +246,18 @@ ifeq ($(origin PKG_CONFIG), undefined)
+   endif
+ endif
+ 
++# Fuzzy64 embeds Lua 5.1; its extension layer supplies the newer table helpers.
++LUA_PKG ?= lua51
++ifeq ($(origin LUA_CFLAGS) $(origin LUA_LDLIBS), undefined undefined)
++  ifeq ($(shell $(PKG_CONFIG) --modversion $(LUA_PKG) 2>/dev/null),)
++    $(error No Lua 5.1 development libraries found! Set LUA_PKG to the pkg-config module name)
++  endif
++  LUA_CFLAGS += $(shell $(PKG_CONFIG) --cflags $(LUA_PKG))
++  LUA_LDLIBS += $(shell $(PKG_CONFIG) --libs $(LUA_PKG))
++endif
++CFLAGS += $(LUA_CFLAGS)
++LDLIBS += $(LUA_LDLIBS)
++
+ ifeq ($(OS), OSX) # use system zlib on OSX
+   ZLIB_LDLIBS += -lz
+ endif
+@@ -355,7 +367,7 @@ RM       ?= rm -f
+ INSTALL  ?= install
+ MKDIR    ?= mkdir -p
+ AWK      ?= awk
+-COMPILE.c = $(Q_CC)$(CC) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
++COMPILE.c = $(Q_CC)$(CC) -std=gnu11 $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
+ COMPILE.cc = $(Q_CXX)$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
+ COMPILE.as = $(Q_AS)$(AS) $(ASFLAGS)
+ LINK.o = $(Q_LD)$(CXX) $(CXXFLAGS) $(LDFLAGS) $(TARGET_ARCH)
+@@ -489,8 +501,8 @@ SOURCE = \
+ 	$(SRCDIR)/fuzzer/fuzzer.c \
+ 	$(SRCDIR)/fuzzer/fuzzer_inputs.c \
+ 	$(SRCDIR)/fuzzer/fuzzer_lualib.c \
+-	$(SRCDIR)/fuzzer/fuzzer_m64input.c \	
+-	$(SRCDIR)/fuzzer/fuzzer_memory.c \	
++	$(SRCDIR)/fuzzer/fuzzer_m64input.c \
++	$(SRCDIR)/fuzzer/fuzzer_memory.c \
+ 	$(SRCDIR)/fuzzer/luaext.c \
+     $(SRCDIR)/main/main.c \
+     $(SRCDIR)/main/util.c \
+diff --git a/mupen64plus-core/src/device/r4300/pure_interp.c b/mupen64plus-core/src/device/r4300/pure_interp.c
+--- a/mupen64plus-core/src/device/r4300/pure_interp.c
++++ b/mupen64plus-core/src/device/r4300/pure_interp.c
+@@ -36,6 +36,7 @@
+ #include "device/r4300/interrupt.h"
+ #include "device/r4300/tlb.h"
+ #include "main/main.h"
++#include "main/savestates.h"
+ #include "osal/preproc.h"
+ 
+ #ifdef DBG
+@@ -726,6 +727,11 @@ void run_pure_interpreter(struct r4300_core* r4300)
+    *r4300_stop() = 0;
+    *r4300_pc_struct() = &r4300->interp_PC;
+    *r4300_pc() = r4300->cp0.last_addr = 0xa4000040;
+ 
++   /* Load startup checkpoints before boot MTC0 instructions can deliver VIs
++    * from an unsafe interrupt context and defer the normal load handler. */
++   if (savestates_get_job() == savestates_job_load)
++      savestates_load();
++
+    while (!*r4300_stop())
+    {
+diff --git a/mupen64plus-core/src/device/r4300/x86/assemble.h b/mupen64plus-core/src/device/r4300/x86/assemble.h
+index 8a47200..05b00ab 100644
+--- a/mupen64plus-core/src/device/r4300/x86/assemble.h
++++ b/mupen64plus-core/src/device/r4300/x86/assemble.h
+@@ -805,7 +805,7 @@ static osal_inline void fmul_preg32_qword(int reg32)
+    put8(0x08 + reg32);
+ }
+ 
+-static osal_inline void fsqrt(void)
++static osal_inline void fsqrt_(void)
+ {
+    put8(0xD9);
+    put8(0xFA);
+diff --git a/mupen64plus-core/src/device/r4300/x86/gcop1_d.c b/mupen64plus-core/src/device/r4300/x86/gcop1_d.c
+index 3c4e70d..0abf030 100644
+--- a/mupen64plus-core/src/device/r4300/x86/gcop1_d.c
++++ b/mupen64plus-core/src/device/r4300/x86/gcop1_d.c
+@@ -96,7 +96,7 @@ void gensqrt_d(void)
+    gencheck_cop1_unusable();
+    mov_eax_memoffs32((unsigned int *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    fld_preg32_qword(EAX);
+-   fsqrt();
++   fsqrt_();
+    mov_eax_memoffs32((unsigned int *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    fstp_preg32_qword(EAX);
+ #endif
+diff --git a/mupen64plus-core/src/device/r4300/x86/gcop1_s.c b/mupen64plus-core/src/device/r4300/x86/gcop1_s.c
+index ab4b8dd..2a95647 100644
+--- a/mupen64plus-core/src/device/r4300/x86/gcop1_s.c
++++ b/mupen64plus-core/src/device/r4300/x86/gcop1_s.c
+@@ -97,7 +97,7 @@ void gensqrt_s(void)
+    gencheck_cop1_unusable();
+    mov_eax_memoffs32((unsigned int *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    fld_preg32_dword(EAX);
+-   fsqrt();
++   fsqrt_();
+    mov_eax_memoffs32((unsigned int *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    fstp_preg32_dword(EAX);
+ #endif
+diff --git a/mupen64plus-core/src/device/r4300/x86_64/assemble.h b/mupen64plus-core/src/device/r4300/x86_64/assemble.h
+index de35d38..e703d27 100644
+--- a/mupen64plus-core/src/device/r4300/x86_64/assemble.h
++++ b/mupen64plus-core/src/device/r4300/x86_64/assemble.h
+@@ -1151,7 +1151,7 @@ static osal_inline void fmul_preg64_qword(int reg64)
+    put8(0x08 + reg64);
+ }
+ 
+-static osal_inline void fsqrt(void)
++static osal_inline void fsqrt_(void)
+ {
+    put8(0xD9);
+    put8(0xFA);
+diff --git a/mupen64plus-core/src/device/r4300/x86_64/gcop1_d.c b/mupen64plus-core/src/device/r4300/x86_64/gcop1_d.c
+index 8bf736b..a4a0b31 100644
+--- a/mupen64plus-core/src/device/r4300/x86_64/gcop1_d.c
++++ b/mupen64plus-core/src/device/r4300/x86_64/gcop1_d.c
+@@ -116,7 +116,7 @@ void gensqrt_d(void)
+    gencheck_cop1_unusable();
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    fld_preg64_qword(RAX);
+-   fsqrt();
++   fsqrt_();
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    fstp_preg64_qword(RAX);
+ #endif
+diff --git a/mupen64plus-core/src/device/r4300/x86_64/gcop1_s.c b/mupen64plus-core/src/device/r4300/x86_64/gcop1_s.c
+index 18754ea..db95327 100644
+--- a/mupen64plus-core/src/device/r4300/x86_64/gcop1_s.c
++++ b/mupen64plus-core/src/device/r4300/x86_64/gcop1_s.c
+@@ -117,7 +117,7 @@ void gensqrt_s(void)
+    gencheck_cop1_unusable();
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    fld_preg64_dword(RAX);
+-   fsqrt();
++   fsqrt_();
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    fstp_preg64_dword(RAX);
+ #endif
+diff --git a/mupen64plus-core/src/fuzzer/fuzzer.c b/mupen64plus-core/src/fuzzer/fuzzer.c
+--- a/mupen64plus-core/src/fuzzer/fuzzer.c
++++ b/mupen64plus-core/src/fuzzer/fuzzer.c
+@@ -2,10 +2,10 @@
+ #include <lua.h>
+ #include <lauxlib.h>
+ #include <lualib.h>
+-#include "api\m64p_types.h"
+-#include "api\m64p_plugin.h"
+-#include "fuzzer\fuzzer_lualib.h"
+-#include "fuzzer\fuzzer_inputs.h"
++#include "api/m64p_types.h"
++#include "api/m64p_plugin.h"
++#include "fuzzer/fuzzer_lualib.h"
++#include "fuzzer/fuzzer_inputs.h"
+ 
+ lua_State *L = NULL;
+ 
+@@ -57,14 +57,14 @@ void fuzzer_main_stop(void) {
+ 	if (L == NULL)
+ 		return;
+ 
+-	// Call lua stop event
++	// Call the shutdown notification, not the Fuzzer:stop() operation.
+ 	lua_getglobal(L, "Fuzzer");
+ 	if (!lua_isnil(L, -1)) {
+-		lua_getfield(L, -1, "stop");
++		lua_getfield(L, -1, "on_stop");
+ 		if (!lua_isnil(L, -1)) {
+ 			lua_pushnil(L);
+ 			if (lua_pcall(L, 1, 0, 0) != 0) {
+-				printf("error running function `Fuzzer:stop()': %s\n", lua_tostring(L, -1));
++				printf("error running function `Fuzzer:on_stop()': %s\n", lua_tostring(L, -1));
+ 			}
+ 		}
+ 		else {
+diff --git a/mupen64plus-core/src/fuzzer/fuzzer.h b/mupen64plus-core/src/fuzzer/fuzzer.h
+index 4f5b3aa..7eb03bf 100644
+--- a/mupen64plus-core/src/fuzzer/fuzzer.h
++++ b/mupen64plus-core/src/fuzzer/fuzzer.h
+@@ -1,8 +1,8 @@
+ #ifndef FUZZER_H_INCLUDED
+ #define FUZZER_H_INCLUDED
+ 
+-#include "api\m64p_types.h"
+-#include "api\m64p_plugin.h"
++#include "api/m64p_types.h"
++#include "api/m64p_plugin.h"
+ 
+ m64p_error fuzzer_main_run(const char * luaFileName);
+ void fuzzer_main_stop(void);
+diff --git a/mupen64plus-core/src/fuzzer/fuzzer_inputs.c b/mupen64plus-core/src/fuzzer/fuzzer_inputs.c
+index e0d4af1..5f2cf09 100644
+--- a/mupen64plus-core/src/fuzzer/fuzzer_inputs.c
++++ b/mupen64plus-core/src/fuzzer/fuzzer_inputs.c
+@@ -1,42 +1,43 @@
+ #include <stdio.h>
++#include <limits.h>
+ #include <lua.h>
+ #include <lauxlib.h>
+ #include <lualib.h>
+-#include "fuzzer\luaext.h"
+-#include "api\m64p_plugin.h"
++#include "fuzzer/luaext.h"
++#include "api/m64p_plugin.h"
+ #include <math.h>
+ 
+ BUTTONS fuzzerInputs = { 0 };
+ 
+ #define luainputs_boolfield(name, button) \
+ static int luainputs_set##name (lua_State * L) { \
+-    fuzzerInputs.##button = 1; \
++    fuzzerInputs.button = 1; \
+ 	return 0; \
+ } \
+ \
+ static int luainputs_clear##name (lua_State * L) { \
+-    fuzzerInputs.##button = 0; \
++    fuzzerInputs.button = 0; \
+ 	return 0; \
+ } \
+ \
+ static int luainputs_toggle##name(lua_State * L) { \
+-    fuzzerInputs.##button = !fuzzerInputs.##button; \
++    fuzzerInputs.button = !fuzzerInputs.button; \
+ 	return 0; \
+ } \
+ \
+ static int luainputs_get##name(lua_State * L) { \
+-	lua_pushboolean(L, fuzzerInputs.##button); \
++	lua_pushboolean(L, fuzzerInputs.button); \
+ 	return 1;  \
+ }
+ 
+ #define luainputs_axis(name, axis) \
+ static int luainputs_set##name(lua_State * L) { \
+-	fuzzerInputs.##axis = (int)luaL_checkinteger(L, 2); \
++	fuzzerInputs.axis = (int)luaL_checkinteger(L, 2); \
+ 	return 0; \
+ } \
+ \
+ static int luainputs_get##name(lua_State * L) { \
+-	lua_pushinteger(L, fuzzerInputs.##axis); \
++	lua_pushinteger(L, fuzzerInputs.axis); \
+ 	return 1; \
+ }
+ 
+diff --git a/mupen64plus-core/src/fuzzer/fuzzer_lualib.c b/mupen64plus-core/src/fuzzer/fuzzer_lualib.c
+--- a/mupen64plus-core/src/fuzzer/fuzzer_lualib.c
++++ b/mupen64plus-core/src/fuzzer/fuzzer_lualib.c
+@@ -1,13 +1,13 @@
+ #include <lua.h>
+ #include <lauxlib.h>
+ #include <lualib.h>
+-#include "fuzzer\fuzzer.h"
+-#include "main\main.h"
+-#include "main\savestates.h"
+-#include "fuzzer\fuzzer_inputs.h"
+-#include "fuzzer\fuzzer_memory.h"
+-#include "fuzzer\fuzzer_m64input.h"
+-#include <fuzzer\luaext.h>
++#include "fuzzer/fuzzer.h"
++#include "main/main.h"
++#include "main/savestates.h"
++#include "fuzzer/fuzzer_inputs.h"
++#include "fuzzer/fuzzer_memory.h"
++#include "fuzzer/fuzzer_m64input.h"
++#include <fuzzer/luaext.h>
+ 
+ static int lua_loadstate(lua_State *L) {
+ 	const char * fileName;
+@@ -22,10 +22,23 @@ static int lua_savestate(lua_State *L) {
+ 	return 0;
+ }
+ 
++static int lua_stop(lua_State *L) {
++	/* Return through the frontend so CoreShutdown drains pending saves. */
++	main_stop();
++	return 0;
++}
++
++static int lua_takescreenshot(lua_State *L) {
++	main_take_next_screenshot();
++	return 0;
++}
++
+ static const luaL_Reg mylib[] = {
+ 	{ "saveState", lua_savestate },
+ 	{ "loadState", lua_loadstate },
+ 	{ "openM64", luam64_open },
++	{ "takeScreenshot", lua_takescreenshot },
++	{ "stop", lua_stop },
+ 	{ NULL, NULL }  /* sentinel */
+ };
+ 
+diff --git a/mupen64plus-core/src/fuzzer/fuzzer_lualib.h b/mupen64plus-core/src/fuzzer/fuzzer_lualib.h
+index 4c32815..f89f85c 100644
+--- a/mupen64plus-core/src/fuzzer/fuzzer_lualib.h
++++ b/mupen64plus-core/src/fuzzer/fuzzer_lualib.h
+@@ -2,7 +2,7 @@
+ #define FUZZER_LUALIB_H_INCLUDED
+ 
+ #include <lua.h>
+-#include "fuzzer\fuzzer.h"
++#include "fuzzer/fuzzer.h"
+ 
+ int luaopen_fuzzerlib(lua_State *L);
+ int luaclose_fuzzerlib(lua_State *L);
+diff --git a/mupen64plus-core/src/fuzzer/fuzzer_m64input.c b/mupen64plus-core/src/fuzzer/fuzzer_m64input.c
+index 6a0a66d..b4165cf 100644
+--- a/mupen64plus-core/src/fuzzer/fuzzer_m64input.c
++++ b/mupen64plus-core/src/fuzzer/fuzzer_m64input.c
+@@ -1,11 +1,13 @@
+ #include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
+ #include <lua.h>
+ #include <lauxlib.h>
+ #include <lualib.h>
+-#include "api\m64p_types.h"
+-#include "api\m64p_plugin.h"
+-#include "fuzzer\fuzzer_lualib.h"
+-#include "fuzzer\luaext.h"
++#include "api/m64p_types.h"
++#include "api/m64p_plugin.h"
++#include "fuzzer/fuzzer_lualib.h"
++#include "fuzzer/luaext.h"
+ #include <math.h>
+ 
+ #define LUA_M64_TABLE_BUFFER_FIELD "_m64InputBuffer"
+diff --git a/mupen64plus-core/src/fuzzer/luaext.c b/mupen64plus-core/src/fuzzer/luaext.c
+index 551bc39..176f572 100644
+--- a/mupen64plus-core/src/fuzzer/luaext.c
++++ b/mupen64plus-core/src/fuzzer/luaext.c
+@@ -1,7 +1,7 @@
+ #include <lua.h>
+ #include <lauxlib.h>
+ #include <lualib.h>
+-#include <fuzzer\luaext.h>
++#include <fuzzer/luaext.h>
+ 
+ /*
+ ** set functions from list 'l' into table at top - 'nup'; each
+diff --git a/mupen64plus-core/src/main/savestates.c b/mupen64plus-core/src/main/savestates.c
+index e385f5c..306a868 100644
+--- a/mupen64plus-core/src/main/savestates.c
++++ b/mupen64plus-core/src/main/savestates.c
+@@ -60,8 +60,8 @@
+ #include "workqueue.h"
+ 
+ #ifdef LIBMINIZIP
+-    #include <unzip.h>
+-    #include <zip.h>
++    #include <minizip/unzip.h>
++    #include <minizip/zip.h>
+ #else
+     #include "main/zip/unzip.h"
+     #include "main/zip/zip.h"
+diff --git a/mupen64plus-core/src/main/workqueue.h b/mupen64plus-core/src/main/workqueue.h
+index 2228359..a2d08b5 100644
+--- a/mupen64plus-core/src/main/workqueue.h
++++ b/mupen64plus-core/src/main/workqueue.h
+@@ -27,7 +27,6 @@
+ 
+ struct work_struct;
+ 
+-struct work_struct *work;
+ typedef void (*work_func_t)(struct work_struct *work);
+ struct work_struct {
+     work_func_t func;
+diff --git a/mupen64plus-core/src/plugin/dummy_video.c b/mupen64plus-core/src/plugin/dummy_video.c
+--- a/mupen64plus-core/src/plugin/dummy_video.c
++++ b/mupen64plus-core/src/plugin/dummy_video.c
+@@ -23,8 +23,12 @@
+ #include <stdlib.h>
+ 
+ #include "api/m64p_types.h"
++#include "device/r4300/mi_controller.h"
+ #include "dummy_video.h"
+ #include "plugin.h"
+ 
++static unsigned int *l_MiIntrReg;
++static void (*l_CheckInterrupts)(void);
++
+ m64p_error dummyvideo_PluginGetVersion(m64p_plugin_type *PluginType, int *PluginVersion,
+                                        int *APIVersion, const char **PluginNamePtr, int *Capabilities)
+@@ -54,6 +58,8 @@ void dummyvideo_ChangeWindow (void)
+ 
+ int dummyvideo_InitiateGFX (GFX_INFO Gfx_Info)
+ {
++    l_MiIntrReg = Gfx_Info.MI_INTR_REG;
++    l_CheckInterrupts = Gfx_Info.CheckInterrupts;
+     return 1;
+ }
+ 
+@@ -63,12 +69,15 @@ void dummyvideo_MoveScreen (int xpos, int ypos)
+ 
+ void dummyvideo_ProcessDList(void)
+ {
+-
++    /* Discard rendering, but complete the task so the RSP schedules DP_INT. */
++    *l_MiIntrReg |= MI_INTR_DP;
++    l_CheckInterrupts();
+ }
+ 
+ void dummyvideo_ProcessRDPList(void)
+ {
+-
++    *l_MiIntrReg |= MI_INTR_DP;
++    l_CheckInterrupts();
+ }
+ 
+ void dummyvideo_RomClosed (void)
+diff --git a/mupen64plus-rsp-hle/projects/unix/Makefile b/mupen64plus-rsp-hle/projects/unix/Makefile
+index 2875a04..d3070d6 100755
+--- a/mupen64plus-rsp-hle/projects/unix/Makefile
++++ b/mupen64plus-rsp-hle/projects/unix/Makefile
+@@ -202,7 +202,7 @@ CC        = $(CROSS_COMPILE)gcc
+ RM       ?= rm -f
+ INSTALL  ?= install
+ MKDIR ?= mkdir -p
+-COMPILE.c = $(Q_CC)$(CC) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
++COMPILE.c = $(Q_CC)$(CC) -std=gnu11 $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
+ LINK.o = $(Q_LD)$(CC) $(CFLAGS) $(LDFLAGS) $(TARGET_ARCH)
+ 
+ # set special flags for given Makefile parameters
+diff --git a/mupen64plus-ui-console/projects/unix/Makefile b/mupen64plus-ui-console/projects/unix/Makefile
+index f69cb66..382bf74 100755
+--- a/mupen64plus-ui-console/projects/unix/Makefile
++++ b/mupen64plus-ui-console/projects/unix/Makefile
+@@ -175,7 +175,7 @@ CXX       = $(CROSS_COMPILE)g++
+ RM       ?= rm -f
+ INSTALL  ?= install
+ MKDIR ?= mkdir -p
+-COMPILE.c = $(Q_CC)$(CC) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
++COMPILE.c = $(Q_CC)$(CC) -std=gnu11 $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
+ LINK.o = $(Q_LD)$(CC) $(CFLAGS) $(LDFLAGS) $(TARGET_ARCH)
+ 
+ # set special flags for given Makefile parameters
+diff --git a/mupen64plus-ui-console/src/main.c b/mupen64plus-ui-console/src/main.c
+index dcd9e9a..e1cd81a 100644
+--- a/mupen64plus-ui-console/src/main.c
++++ b/mupen64plus-ui-console/src/main.c
+@@ -263,6 +263,7 @@ static void printUsage(const char *progname)
+            "    --rsp (plugin-spec)    : use rsp plugin given by (plugin-spec)\n"
+            "    --emumode (mode)       : set emu mode to: 0=Pure Interpreter 1=Interpreter 2=DynaRec\n"
+            "    --savestate (filepath) : savestate loaded at startup\n"
++           "    --fuzzer-lua (file)    : run Fuzzy64 Lua callbacks from (file)\n"
+            "    --testshots (list)     : take screenshots at frames given in comma-separated (list), then quit\n"
+            "    --set (param-spec)     : set a configuration variable, format: ParamSection[ParamName]=Value\n"
+            "    --core-compare-send    : use the Core Comparison debugging feature, in data sending mode\n"
+@@ -480,7 +481,7 @@ static m64p_error ParseCommandLineFinal(int argc, const char **argv)
+             }
+         }
+         else if ((strcmp(argv[i], "--corelib") == 0 || strcmp(argv[i], "--configdir") == 0 ||
+-                  strcmp(argv[i], "--datadir") == 0) && ArgsLeft >= 1)
++                  strcmp(argv[i], "--datadir") == 0 || strcmp(argv[i], "--fuzzer-lua") == 0) && ArgsLeft >= 1)
+         {   /* these are handled in ParseCommandLineInitial */
+             i++;
+         }
+diff --git a/mupen64plus-video-glide64mk2/projects/unix/Makefile b/mupen64plus-video-glide64mk2/projects/unix/Makefile
+index 9cf3037..0863de8 100755
+--- a/mupen64plus-video-glide64mk2/projects/unix/Makefile
++++ b/mupen64plus-video-glide64mk2/projects/unix/Makefile
+@@ -299,7 +299,7 @@ CXX       = $(CROSS_COMPILE)g++
+ RM       ?= rm -f
+ INSTALL  ?= install
+ MKDIR ?= mkdir -p
+-COMPILE.c = $(Q_CC)$(CC) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
++COMPILE.c = $(Q_CC)$(CC) -std=gnu11 $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
+ COMPILE.cc = $(Q_CXX)$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
+ LINK.o = $(Q_LD)$(CXX) $(CXXFLAGS) $(LDFLAGS) $(TARGET_ARCH)
+ 
+@@ -397,7 +397,7 @@ SOURCE += \
+ 	$(SRCDIR)/GlideHQ/tc-1.1+/texstore.c
+ 
+ CPPFLAGS += -DTEXTURE_FILTER -DDUMP_CACHE
+-LDLIBS += -lboost_filesystem$(BOOST_SUFFIX) -lboost_system$(BOOST_SUFFIX)
++LDLIBS += -lboost_filesystem$(BOOST_SUFFIX)
+ 
+   ifeq ($(TXCDXTN), 1)
+     CPPFLAGS += -DTXCDXTN_EXTERNAL
+diff --git a/mupen64plus-video-glide64mk2/src/Glide64/Main.cpp b/mupen64plus-video-glide64mk2/src/Glide64/Main.cpp
+--- a/mupen64plus-video-glide64mk2/src/Glide64/Main.cpp
++++ b/mupen64plus-video-glide64mk2/src/Glide64/Main.cpp
+@@ -1466,9 +1466,10 @@ EXPORT void CALL ReadScreen2(void *dest, int *width, int *height, int front)
+     }
+ 
+   GrLfbInfo_t info;
++  const GrBuffer_t buffer = front ? GR_BUFFER_FRONTBUFFER : GR_BUFFER_BACKBUFFER;
+   info.size = sizeof(GrLfbInfo_t);
+   if (grLfbLock (GR_LFB_READ_ONLY,
+-    GR_BUFFER_FRONTBUFFER,
++    buffer,
+     GR_LFBWRITEMODE_888,
+     GR_ORIGIN_UPPER_LEFT,
+     FXFALSE,
+@@ -1496,8 +1497,8 @@ EXPORT void CALL ReadScreen2(void *dest, int *width, int *height, int front)
+         line += settings.res_x * 3;
+       }
+ 
+-      // Unlock the frontbuffer
+-      grLfbUnlock (GR_LFB_READ_ONLY, GR_BUFFER_FRONTBUFFER);
++      // Unlock the requested buffer.
++      grLfbUnlock (GR_LFB_READ_ONLY, buffer);
+     }
+     VLOG ("ReadScreen. Success.\n");
+   }
+diff --git a/mupen64plus-video-glide64mk2/src/GlideHQ/TxCache.cpp b/mupen64plus-video-glide64mk2/src/GlideHQ/TxCache.cpp
+index 46960f4..4111296 100644
+--- a/mupen64plus-video-glide64mk2/src/GlideHQ/TxCache.cpp
++++ b/mupen64plus-video-glide64mk2/src/GlideHQ/TxCache.cpp
+@@ -237,7 +237,7 @@ TxCache::save(const wchar_t *path, const wchar_t *filename, int config)
+     /* dump cache to disk */
+     char cbuf[MAX_PATH];
+ 
+-    boost::filesystem::wpath cachepath(path);
++    boost::filesystem::path cachepath(path);
+     boost::filesystem::create_directory(cachepath);
+ 
+     /* Ugly hack to enable fopen/gzopen in Win9x */
+@@ -330,7 +330,7 @@ TxCache::load(const wchar_t *path, const wchar_t *filename, int config)
+   /* find it on disk */
+   char cbuf[MAX_PATH];
+ 
+-  boost::filesystem::wpath cachepath(path);
++  boost::filesystem::path cachepath(path);
+ 
+ #ifdef BOOST_WINDOWS_API
+   wchar_t curpath[MAX_PATH];
+diff --git a/mupen64plus-video-glide64mk2/src/GlideHQ/TxHiResCache.cpp b/mupen64plus-video-glide64mk2/src/GlideHQ/TxHiResCache.cpp
+index ac87f2f..3a45754 100644
+--- a/mupen64plus-video-glide64mk2/src/GlideHQ/TxHiResCache.cpp
++++ b/mupen64plus-video-glide64mk2/src/GlideHQ/TxHiResCache.cpp
+@@ -65,8 +65,8 @@ TxHiResCache::~TxHiResCache()
+   if ((_options & DUMP_HIRESTEXCACHE) && !_haveCache && !_abortLoad) {
+     /* dump cache to disk */
+     std::wstring filename = _ident + L"_HIRESTEXTURES.dat";
+-    boost::filesystem::wpath cachepath(_cachepath);
+-    cachepath /= boost::filesystem::wpath(L"glidehq");
++    boost::filesystem::path cachepath(_cachepath);
++    cachepath /= boost::filesystem::path(L"glidehq");
+     int config = _options & (HIRESTEXTURES_MASK|COMPRESS_HIRESTEX|COMPRESSION_MASK|TILE_HIRESTEX|FORCE16BPP_HIRESTEX|GZ_HIRESTEXCACHE|LET_TEXARTISTS_FLY);
+ 
+     TxCache::save(cachepath.wstring().c_str(), filename.c_str(), config);
+@@ -107,8 +107,8 @@ TxHiResCache::TxHiResCache(int maxwidth, int maxheight, int maxbpp, int options,
+   if (_options & DUMP_HIRESTEXCACHE) {
+     /* find it on disk */
+     std::wstring filename = _ident + L"_HIRESTEXTURES.dat";
+-    boost::filesystem::wpath cachepath(_cachepath);
+-    cachepath /= boost::filesystem::wpath(L"glidehq");
++    boost::filesystem::path cachepath(_cachepath);
++    cachepath /= boost::filesystem::path(L"glidehq");
+     int config = _options & (HIRESTEXTURES_MASK|COMPRESS_HIRESTEX|COMPRESSION_MASK|TILE_HIRESTEX|FORCE16BPP_HIRESTEX|GZ_HIRESTEXCACHE|LET_TEXARTISTS_FLY);
+ 
+     _haveCache = TxCache::load(cachepath.wstring().c_str(), filename.c_str(), config);
+@@ -132,7 +132,7 @@ TxHiResCache::load(boolean replace) /* 0 : reload, 1 : replace partial */
+ 
+     if (!replace) TxCache::clear();
+ 
+-    boost::filesystem::wpath dir_path(_datapath);
++    boost::filesystem::path dir_path(_datapath);
+ 
+     switch (_options & HIRESTEXTURES_MASK) {
+     case GHQ_HIRESTEXTURES:
+@@ -149,8 +149,8 @@ TxHiResCache::load(boolean replace) /* 0 : reload, 1 : replace partial */
+       INFO(80, L"  usage of only 2) and 3) highly recommended!\n");
+       INFO(80, L"  folder names must be in US-ASCII characters!\n");
+ 
+-      dir_path /= boost::filesystem::wpath(L"hires_texture");
+-      dir_path /= boost::filesystem::wpath(_ident);
++      dir_path /= boost::filesystem::path(L"hires_texture");
++      dir_path /= boost::filesystem::path(_ident);
+       loadHiResTextures(dir_path, replace);
+       break;
+     case JABO_HIRESTEXTURES:
+@@ -164,7 +164,7 @@ TxHiResCache::load(boolean replace) /* 0 : reload, 1 : replace partial */
+ }
+ 
+ boolean
+-TxHiResCache::loadHiResTextures(boost::filesystem::wpath dir_path, boolean replace)
++TxHiResCache::loadHiResTextures(boost::filesystem::path dir_path, boolean replace)
+ {
+   uint32_t last, now, diff;
+   DBG_INFO(80, L"-----\n");
+@@ -196,15 +196,7 @@ TxHiResCache::loadHiResTextures(boost::filesystem::wpath dir_path, boolean repla
+       ERRLOG("Error while changing current directory to '%s'!", cbuf);
+ #endif
+ 
+-  /* NOTE: I could use the boost::wdirectory_iterator and boost::wpath
+-   * to resolve UNICODE file names and paths. But then, _wfopen() is
+-   * required to get the file descriptor for MS Windows to pass into
+-   * libpng, which is incompatible with Win9x. Win9x's fopen() cannot
+-   * handle UNICODE names. UNICODE capable boost::filesystem is available
+-   * with Boost1.34.1 built with VC8.0 (bjam --toolset=msvc-8.0 stage).
+-   *
+-   * RULE OF THUMB: NEVER save texture packs in NON-ASCII names!!
+-   */
++  /* Texture pack filenames must remain ASCII for the legacy image loaders. */
+   boost::filesystem::directory_iterator it(dir_path);
+   boost::filesystem::directory_iterator end_it; /* default construction yields past-the-end */
+ 
+@@ -224,7 +216,7 @@ TxHiResCache::loadHiResTextures(boost::filesystem::wpath dir_path, boolean repla
+     }
+ 
+     DBG_INFO(80, L"-----\n");
+-    DBG_INFO(80, L"file: %ls\n", it->path().leaf().c_str());
++    DBG_INFO(80, L"file: %ls\n", it->path().filename().wstring().c_str());
+ 
+     int width = 0, height = 0;
+     uint16 format = 0;
+@@ -257,8 +249,7 @@ TxHiResCache::loadHiResTextures(boost::filesystem::wpath dir_path, boolean repla
+     /* read in Rice's file naming convention */
+ #define CRCFMTSIZ_LEN 13
+ #define PALCRC_LEN 9
+-    //wcstombs(fname, it->path().leaf().c_str(), MAX_PATH);
+-    strncpy(fname, it->path().leaf().string().c_str(), sizeof(fname));
++    strncpy(fname, it->path().filename().string().c_str(), sizeof(fname));
+     fname[sizeof(fname) - 1] = '\0';
+     /* XXX case sensitivity fiasco!
+      * files must use _a, _rgb, _all, _allciByRGBA, _ciByRGBA, _ci
+@@ -276,7 +267,7 @@ TxHiResCache::loadHiResTextures(boost::filesystem::wpath dir_path, boolean repla
+ #if !DEBUG
+       INFO(80, L"-----\n");
+       INFO(80, L"path: %ls\n", dir_path.string().c_str());
+-      INFO(80, L"file: %ls\n", it->path().leaf().c_str());
++      INFO(80, L"file: %ls\n", it->path().filename().wstring().c_str());
+ #endif
+       INFO(80, L"Error: not png or bmp or dds!\n");
+       continue;
+@@ -295,7 +286,7 @@ TxHiResCache::loadHiResTextures(boost::filesystem::wpath dir_path, boolean repla
+ #if !DEBUG
+       INFO(80, L"-----\n");
+       INFO(80, L"path: %ls\n", dir_path.string().c_str());
+-      INFO(80, L"file: %ls\n", it->path().leaf().c_str());
++      INFO(80, L"file: %ls\n", it->path().filename().wstring().c_str());
+ #endif
+       INFO(80, L"Error: not Rice texture naming convention!\n");
+       continue;
+@@ -304,7 +295,7 @@ TxHiResCache::loadHiResTextures(boost::filesystem::wpath dir_path, boolean repla
+ #if !DEBUG
+       INFO(80, L"-----\n");
+       INFO(80, L"path: %ls\n", dir_path.string().c_str());
+-      INFO(80, L"file: %ls\n", it->path().leaf().c_str());
++      INFO(80, L"file: %ls\n", it->path().filename().wstring().c_str());
+ #endif
+       INFO(80, L"Error: crc32 = 0!\n");
+       continue;
+@@ -319,7 +310,7 @@ TxHiResCache::loadHiResTextures(boost::filesystem::wpath dir_path, boolean repla
+ #if !DEBUG
+         INFO(80, L"-----\n");
+         INFO(80, L"path: %ls\n", dir_path.string().c_str());
+-        INFO(80, L"file: %ls\n", it->path().leaf().c_str());
++        INFO(80, L"file: %ls\n", it->path().filename().wstring().c_str());
+ #endif
+         INFO(80, L"Error: already cached! duplicate texture!\n");
+         continue;
+@@ -355,7 +346,7 @@ TxHiResCache::loadHiResTextures(boost::filesystem::wpath dir_path, boolean repla
+ #if !DEBUG
+           INFO(80, L"-----\n");
+           INFO(80, L"path: %ls\n", dir_path.string().c_str());
+-          INFO(80, L"file: %ls\n", it->path().leaf().c_str());
++          INFO(80, L"file: %ls\n", it->path().filename().wstring().c_str());
+ #endif
+           INFO(80, L"Error: missing _rgb.*! _a.* must be paired with _rgb.*!\n");
+           continue;
+@@ -396,7 +387,7 @@ TxHiResCache::loadHiResTextures(boost::filesystem::wpath dir_path, boolean repla
+ #if !DEBUG
+           INFO(80, L"-----\n");
+           INFO(80, L"path: %ls\n", dir_path.string().c_str());
+-          INFO(80, L"file: %ls\n", it->path().leaf().c_str());
++          INFO(80, L"file: %ls\n", it->path().filename().wstring().c_str());
+ #endif
+           if (!tex) {
+             INFO(80, L"Error: missing _rgb.*!\n");
+@@ -448,7 +439,7 @@ TxHiResCache::loadHiResTextures(boost::filesystem::wpath dir_path, boolean repla
+ #if !DEBUG
+           INFO(80, L"-----\n");
+           INFO(80, L"path: %ls\n", dir_path.string().c_str());
+-          INFO(80, L"file: %ls\n", it->path().leaf().c_str());
++          INFO(80, L"file: %ls\n", it->path().filename().wstring().c_str());
+ #endif
+           INFO(80, L"Warning: missing _a.*! only using _rgb.*. treat as opaque texture.\n");
+           int i;
+@@ -495,7 +486,7 @@ TxHiResCache::loadHiResTextures(boost::filesystem::wpath dir_path, boolean repla
+ #if !DEBUG
+           INFO(80, L"-----\n");
+           INFO(80, L"path: %ls\n", dir_path.string().c_str());
+-          INFO(80, L"file: %ls\n", it->path().leaf().c_str());
++          INFO(80, L"file: %ls\n", it->path().filename().wstring().c_str());
+ #endif
+           INFO(80, L"Error: W:H aspect ratio range not 8:1 - 1:8!\n");
+           continue;
+@@ -507,7 +498,7 @@ TxHiResCache::loadHiResTextures(boost::filesystem::wpath dir_path, boolean repla
+ #if !DEBUG
+           INFO(80, L"-----\n");
+           INFO(80, L"path: %ls\n", dir_path.string().c_str());
+-          INFO(80, L"file: %ls\n", it->path().leaf().c_str());
++          INFO(80, L"file: %ls\n", it->path().filename().wstring().c_str());
+ #endif
+           INFO(80, L"Error: not power of 2 size!\n");
+           continue;
+@@ -520,7 +511,7 @@ TxHiResCache::loadHiResTextures(boost::filesystem::wpath dir_path, boolean repla
+ #if !DEBUG
+       INFO(80, L"-----\n");
+       INFO(80, L"path: %ls\n", dir_path.string().c_str());
+-      INFO(80, L"file: %ls\n", it->path().leaf().c_str());
++      INFO(80, L"file: %ls\n", it->path().filename().wstring().c_str());
+ #endif
+       INFO(80, L"Error: load failed!\n");
+       continue;
+@@ -539,7 +530,7 @@ TxHiResCache::loadHiResTextures(boost::filesystem::wpath dir_path, boolean repla
+ #if !DEBUG
+       INFO(80, L"-----\n");
+       INFO(80, L"path: %ls\n", dir_path.string().c_str());
+-      INFO(80, L"file: %ls\n", it->path().leaf().c_str());
++      INFO(80, L"file: %ls\n", it->path().filename().wstring().c_str());
+ #endif
+       INFO(80, L"Error: not width * height > 4 or 8bit palette color or 32bpp or dxt1 or dxt3 or dxt5!\n");
+       continue;
+@@ -1017,7 +1008,7 @@ TxHiResCache::loadHiResTextures(boost::filesystem::wpath dir_path, boolean repla
+ #if !DEBUG
+       INFO(80, L"-----\n");
+       INFO(80, L"path: %ls\n", dir_path.string().c_str());
+-      INFO(80, L"file: %ls\n", it->path().leaf().c_str());
++      INFO(80, L"file: %ls\n", it->path().filename().wstring().c_str());
+ #endif
+       if (tex) {
+         free(tex);
+diff --git a/mupen64plus-video-glide64mk2/src/GlideHQ/TxHiResCache.h b/mupen64plus-video-glide64mk2/src/GlideHQ/TxHiResCache.h
+index d2094fe..4f76d21 100644
+--- a/mupen64plus-video-glide64mk2/src/GlideHQ/TxHiResCache.h
++++ b/mupen64plus-video-glide64mk2/src/GlideHQ/TxHiResCache.h
+@@ -47,7 +47,7 @@ private:
+   TxImage *_txImage;
+   TxQuantize *_txQuantize;
+   TxReSample *_txReSample;
+-  boolean loadHiResTextures(boost::filesystem::wpath dir_path, boolean replace);
++  boolean loadHiResTextures(boost::filesystem::path dir_path, boolean replace);
+ public:
+   ~TxHiResCache();
+   TxHiResCache(int maxwidth, int maxheight, int maxbpp, int options,
+diff --git a/mupen64plus-video-glide64mk2/src/GlideHQ/TxTexCache.cpp b/mupen64plus-video-glide64mk2/src/GlideHQ/TxTexCache.cpp
+index 2297a0f..99d1364 100644
+--- a/mupen64plus-video-glide64mk2/src/GlideHQ/TxTexCache.cpp
++++ b/mupen64plus-video-glide64mk2/src/GlideHQ/TxTexCache.cpp
+@@ -37,8 +37,8 @@ TxTexCache::~TxTexCache()
+   if (_options & DUMP_TEXCACHE) {
+     /* dump cache to disk */
+     std::wstring filename = _ident + L"_MEMORYCACHE.dat";
+-    boost::filesystem::wpath cachepath(_cachepath);
+-    cachepath /= boost::filesystem::wpath(L"glidehq");
++    boost::filesystem::path cachepath(_cachepath);
++    cachepath /= boost::filesystem::path(L"glidehq");
+     int config = _options & (FILTER_MASK|ENHANCEMENT_MASK|COMPRESS_TEX|COMPRESSION_MASK|FORCE16BPP_TEX|GZ_TEXCACHE);
+ 
+     TxCache::save(cachepath.wstring().c_str(), filename.c_str(), config);
+@@ -58,8 +58,8 @@ TxTexCache::TxTexCache(int options, int cachesize, const wchar_t *datapath, cons
+   if (_options & DUMP_TEXCACHE) {
+     /* find it on disk */
+     std::wstring filename = _ident + L"_MEMORYCACHE.dat";
+-    boost::filesystem::wpath cachepath(_cachepath);
+-    cachepath /= boost::filesystem::wpath(L"glidehq");
++    boost::filesystem::path cachepath(_cachepath);
++    cachepath /= boost::filesystem::path(L"glidehq");
+     int config = _options & (FILTER_MASK|ENHANCEMENT_MASK|COMPRESS_TEX|COMPRESSION_MASK|FORCE16BPP_TEX|GZ_TEXCACHE);
+ 
+     TxCache::load(cachepath.wstring().c_str(), filename.c_str(), config);

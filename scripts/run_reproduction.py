@@ -8,32 +8,27 @@ import os
 import subprocess
 from pathlib import Path
 
-ROOT = Path("/home/zman/projects/labs/ttc_upwarp")
-EMULATOR = ROOT / "Fuzzy64/mupen64plus-ui-console/projects/unix/mupen64plus"
-CORE = ROOT / "Fuzzy64/mupen64plus-core/projects/unix/libmupen64plus.so.2.0.0"
-RSP = ROOT / "Fuzzy64/mupen64plus-rsp-hle/projects/unix/mupen64plus-rsp-hle.so"
-MOVIE = ROOT / "TTC-Upwarp-Overlay/Tas Attempts/tas26.m64"
-STATE = ROOT / "emulator/tas26.jp.m64p.st"
-SCRIPT = ROOT / "scripts/reproduce_bitflip.lua"
-ROM = ROOT / "emulator/sm64.jp.z64"
+ROOT = Path(__file__).resolve().parents[1]
 EXPECTED_ROM_MD5 = "85d61f5525af708c9f1e84dce6dc10e9"
 
 
-def run_case(inject: bool) -> list[dict[str, int | float | str]]:
+def run_case(inject: bool, args: argparse.Namespace) -> list[dict[str, int | float | str]]:
     env = os.environ.copy()
     env.update({
         "EVENT_X": "800",
         "EVENT_Z": "1900",
         "INJECT_BIT_FLIP": "1" if inject else "0",
-        "M64_PATH": str(MOVIE),
+        "M64_PATH": str(args.movie),
         "STOP_VI": "160",
         "SDL_AUDIODRIVER": "dummy",
     })
     command = [
-        str(EMULATOR), "--emumode", "0", "--corelib", str(CORE), "--rsp", str(RSP),
-        "--savestate", str(STATE), "--fuzzer-lua", str(SCRIPT), str(ROM),
+        str(args.emulator), "--emumode", "0", "--corelib", str(args.core), "--rsp", str(args.rsp),
+        "--gfx", "dummy", "--audio", "dummy", "--input", "dummy", "--nosaveoptions",
+        "--datadir", str(args.data_dir), "--configdir", str(args.config_dir),
+        "--savestate", str(args.savestate), "--fuzzer-lua", str(args.lua), str(args.rom),
     ]
-    run = subprocess.run(command, env=env, capture_output=True, text=True, timeout=30)
+    run = subprocess.run(command, cwd=args.root, env=env, capture_output=True, text=True, timeout=args.timeout)
     if run.returncode != 0:
         raise RuntimeError(f"emulator failed ({run.returncode}):\n{run.stdout}\n{run.stderr}")
 
@@ -70,14 +65,42 @@ def first_landing(rows: list[dict[str, int | float | str]]) -> dict[str, int | f
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--root", type=Path, default=ROOT)
+    parser.add_argument("--emulator", type=Path)
+    parser.add_argument("--core", type=Path)
+    parser.add_argument("--rsp", type=Path)
+    parser.add_argument("--movie", type=Path)
+    parser.add_argument("--savestate", type=Path)
+    parser.add_argument("--lua", type=Path)
+    parser.add_argument("--rom", type=Path)
+    parser.add_argument("--timeout", type=float, default=30.0)
+    parser.add_argument("--data-dir", type=Path)
+    parser.add_argument("--config-dir", type=Path)
     args = parser.parse_args()
+    args.root = args.root.resolve()
+    defaults = {
+        "emulator": "emulator/bin/mupen64plus",
+        "core": "emulator/lib/libmupen64plus.so.2.0.0",
+        "rsp": "emulator/lib/mupen64plus/mupen64plus-rsp-hle.so",
+        "movie": "TTC-Upwarp-Overlay/Tas Attempts/tas26.m64",
+        "savestate": "emulator/tas26.jp.m64p.st",
+        "lua": "scripts/reproduce_bitflip.lua",
+        "rom": "emulator/sm64.jp.z64",
+    }
+    for name, relative_path in defaults.items():
+        setattr(args, name, (getattr(args, name) or args.root / relative_path).expanduser().resolve())
+    missing = [str(getattr(args, name)) for name in defaults if not getattr(args, name).is_file()]
+    if missing:
+        raise FileNotFoundError("missing reproduction dependency: " + ", ".join(missing))
+    args.data_dir = (args.data_dir or args.root / "emulator/share/mupen64plus").expanduser().resolve()
+    args.config_dir = (args.config_dir or args.root / "emulator/config").expanduser().resolve()
 
-    rom_md5 = hashlib.md5(ROM.read_bytes()).hexdigest()
+    rom_md5 = hashlib.md5(args.rom.read_bytes()).hexdigest()
     if rom_md5 != EXPECTED_ROM_MD5:
         raise RuntimeError(f"unexpected ROM MD5: {rom_md5}")
 
-    injected = run_case(True)
-    control = run_case(False)
+    injected = run_case(True, args)
+    control = run_case(False, args)
     source = at_vi(injected, 100)
     flipped = at_vi(injected, 101)
     injected_after_step = at_vi(injected, 102)

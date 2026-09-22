@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import io
 import json
 import math
 import os
@@ -32,12 +33,16 @@ import cv2
 import numpy as np
 from PIL import Image
 
+from extract_vod_fit_targets import parse_path_map, read_asset_bytes
+
 ROOT = Path(__file__).resolve().parents[1]
-MEDIA_DEFAULT = Path("/tmp/ttc-highlight.webm")
+MEDIA_DEFAULT = ROOT / "media/ttc-highlight.webm"
 TARGET_MANIFEST_DEFAULT = ROOT / "results/vod_fit_targets.json"
 MOTION_RESULT_DEFAULT = ROOT / "results/vod_render_motion_fit.json"
 CACHE_DEFAULT = Path("/tmp/vod_motion_cache/vod")
-OUTPUT_DEFAULT = ROOT / "results/highlight_motion_audit.json"
+OUTPUT_DEFAULT = ROOT / "media/highlight_motion_audit.json"
+EXPECTED_MEDIA_SHA256 = "c268f1ae51a4dbd64b4e394199b31e04b3cd02441489404c7c046870b47bd723"
+EXPECTED_MEDIA_SIZE = 7_174_481
 
 TARGET_START = 340
 TARGET_END = 530
@@ -146,9 +151,9 @@ def tool_record(name: str, command: list[str]) -> dict[str, Any]:
     return record
 
 
-def validate_media(path: Path) -> dict[str, Any]:
-    expected_sha = "c268f1ae51a4dbd64b4e394199b31e04b3cd02441489404c7c046870b47bd723"
-    expected_size = 7_174_481
+def validate_media(
+    path: Path, expected_sha: str = EXPECTED_MEDIA_SHA256, expected_size: int = EXPECTED_MEDIA_SIZE,
+) -> dict[str, Any]:
     if not path.is_file():
         raise RuntimeError(f"missing highlight media: {path}")
     actual_size = path.stat().st_size
@@ -247,7 +252,10 @@ def decode_highlight(path: Path, ffprobe_frames: list[dict[str, Any]]) -> tuple[
     return images, records
 
 
-def validate_target_inputs(manifest_path: Path, motion_path: Path, cache_dir: Path) -> tuple[dict[str, Any], dict[str, Any], list[np.ndarray], dict[int, dict[str, Any]]]:
+def validate_target_inputs(
+    manifest_path: Path, motion_path: Path, cache_dir: Path,
+    remote_host: str | None = None, path_maps: Iterable[tuple[Path, Path]] = (),
+) -> tuple[dict[str, Any], dict[str, Any], list[np.ndarray], dict[int, dict[str, Any]]]:
     manifest_raw = manifest_path.read_bytes()
     motion_raw = motion_path.read_bytes()
     manifest = json.loads(manifest_raw)
@@ -292,20 +300,26 @@ def validate_target_inputs(manifest_path: Path, motion_path: Path, cache_dir: Pa
         index = int(row["encoded_index"])
         filename = str(row["png_filename"])
         path = cache_dir / filename
-        if not path.is_file():
-            raise RuntimeError(f"missing cached target PNG: {path}")
-        raw = path.read_bytes()
+        cached = path.is_file()
+        if cached:
+            raw = path.read_bytes()
+            source_record: dict[str, Any] = {"transport": "cache", "path": str(path)}
+        else:
+            raw, source_record = read_asset_bytes(str(row["remote_png_path"]), remote_host, path_maps)
         actual_sha = sha256_bytes(raw)
         actual_size = len(raw)
         if actual_sha != str(row["png_sha256"]) or actual_size != int(row["png_size_bytes"]):
             raise RuntimeError(f"target PNG hash/size mismatch: {filename}")
-        with Image.open(path) as image:
+        with Image.open(io.BytesIO(raw)) as image:
             image.load()
             dimensions = tuple(int(x) for x in image.size)
             mode = image.mode
             rgb = np.asarray(image.convert("RGB"), dtype=np.uint8)
         if dimensions != (340, 215):
             raise RuntimeError(f"target PNG dimensions mismatch: {filename}: {dimensions}")
+        if not cached:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(raw)
         arrays.append(rgb)
         by_index[index] = row
         consumed.append(
@@ -313,6 +327,8 @@ def validate_target_inputs(manifest_path: Path, motion_path: Path, cache_dir: Pa
                 "target_encoded_index": index,
                 "target_timeline_index": timeline_index,
                 "path": str(path),
+                "manifest_path": str(row["remote_png_path"]),
+                "source": source_record,
                 "manifest_png_filename": filename,
                 "sha256": actual_sha,
                 "expected_sha256": str(row["png_sha256"]),
@@ -827,11 +843,18 @@ def alignment_controls(
 
 
 def run(args: argparse.Namespace) -> dict[str, Any]:
-    media = validate_media(args.media)
+    media = validate_media(
+        args.media,
+        args.media_sha256 if args.media_sha256 is not None else EXPECTED_MEDIA_SHA256,
+        args.media_size if args.media_size is not None else EXPECTED_MEDIA_SIZE,
+    )
+    media["identity_binding"] = "explicit_cli" if args.media_sha256 is not None else "historical_default"
     ffmpeg = tool_record("ffmpeg", ["ffmpeg", "-version"])
     ffprobe_meta, ffprobe_frames, ffprobe_tools = probe_media(args.media)
     highlight_images, decoded_records = decode_highlight(args.media, ffprobe_frames)
-    target_validation, motion, target_arrays, target_rows = validate_target_inputs(args.target_manifest, args.motion_result, args.cache_dir)
+    target_validation, motion, target_arrays, target_rows = validate_target_inputs(
+        args.target_manifest, args.motion_result, args.cache_dir, args.remote_host, args.path_map
+    )
     target_features = [feature(image) for image in target_arrays]
     highlight_features = [feature(image) for image in highlight_images]
     target_timeline_indices = [int(target_rows[index]["source_pts"] - int(target_rows[TARGET_START]["source_pts"])) // 1001 + TARGET_START for index in range(TARGET_START, TARGET_END + 1)]
@@ -1031,11 +1054,22 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--media", type=Path, default=MEDIA_DEFAULT)
+    parser.add_argument("--media-sha256", help="explicit expected SHA-256 for a newly acquired highlight; requires --media-size")
+    parser.add_argument("--media-size", type=int, help="explicit expected byte size; historical identity is enforced when both options are omitted")
     parser.add_argument("--target-manifest", type=Path, default=TARGET_MANIFEST_DEFAULT)
     parser.add_argument("--motion-result", type=Path, default=MOTION_RESULT_DEFAULT)
     parser.add_argument("--cache-dir", type=Path, default=CACHE_DEFAULT)
+    parser.add_argument("--remote-host", help="explicit SSH fallback for target PNGs missing locally")
+    parser.add_argument("--path-map", action="append", type=parse_path_map, default=[], metavar="OLD=LOCAL", help="relocate manifest path prefixes without altering provenance; repeatable")
     parser.add_argument("--output", type=Path, default=OUTPUT_DEFAULT)
     args = parser.parse_args()
+    if (args.media_sha256 is None) != (args.media_size is None):
+        parser.error("--media-sha256 and --media-size must be supplied together")
+    if args.media_sha256 is not None:
+        if len(args.media_sha256) != 64 or any(char not in "0123456789abcdef" for char in args.media_sha256):
+            parser.error("--media-sha256 must be 64 lowercase hexadecimal characters")
+        if args.media_size <= 0:
+            parser.error("--media-size must be positive")
     report = run(args)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     with args.output.open("w", encoding="utf-8", newline="\n") as stream:

@@ -4,7 +4,10 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import shlex
+import shutil
+import socket
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
@@ -12,18 +15,8 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "scripts/floor_null_probe.c"
-DEFAULT_OUTPUT = ROOT / "results/floor_null_fallback_probe.json"
-DEFAULT_REMOTE_HOST = "roach"
-DEFAULT_REMOTE_ROOT = "/home/zman/projects/labs/ttc_upwarp"
-REMOTE_SOURCE = "scripts/floor_null_probe.c"
-REMOTE_EXE = "scripts/floor_null_probe.exe"
-REMOTE_DLL = "wafel/libsm64/sm64_jp.dll"
-REMOTE_LOG_DIR = "results/floor_null_fallback_probe_20260812"
-WINE = "/nix/store/m3vk5lr49wdgyya04jxnyr4d63wcwvki-wine64-11.0/bin/wine"
-MCFGTHREAD_LIB = "/nix/store/gr5hjbyxing73wqm3jz9ssn2qp1x664r-mcfgthread-x86_64-w64-mingw32-2.4.1/lib"
-# Keep the literal tool path in one place; this is also recorded verbatim in
-# the result so a rerun cannot silently pick another compiler.
-CC = "/nix/store/2glwr7lcawg7m9rk4p5bdjlf7svpw405-x86_64-w64-mingw32-gcc-wrapper-15.2.0/bin/x86_64-w64-mingw32-gcc"
+HEADER = ROOT / "scripts/wafel_jp_dll.h"
+EXPECTED_DLL_SHA256 = "a3dc4984628bfc2bcdc92eb2c3af47beae1472fd54c07a24c286046d7962f67b"
 
 
 def sha256_bytes(data: bytes) -> str:
@@ -31,27 +24,37 @@ def sha256_bytes(data: bytes) -> str:
 
 
 def sha256_file(path: Path) -> str:
-    return sha256_bytes(path.read_bytes())
+    digest = hashlib.sha256()
+    with path.open("rb") as source:
+        for chunk in iter(lambda: source.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
-def run_ssh(host: str, command: str, *, check: bool = True) -> subprocess.CompletedProcess[str]:
-    result = subprocess.run(
-        ["ssh", host, command],
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
+def resolve_tool(configured: str | None, name: str) -> str:
+    candidates = [configured] if configured else [name, str(ROOT / ".tools/bin" / name)]
+    if not configured and name == "wine":
+        candidates.insert(1, "wine64")
+    for candidate in candidates:
+        resolved = shutil.which(candidate)
+        if resolved:
+            return os.path.abspath(resolved)
+    raise RuntimeError(
+        f"missing executable {configured or name}; set its command-line option/environment variable "
+        "or run scripts/setup_windows_toolchain.sh"
     )
-    if check and result.returncode != 0:
-        raise RuntimeError(
-            f"remote command failed ({result.returncode}): {command}\n"
-            f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
-        )
-    return result
 
 
-def remote_path(root: str, relative: str) -> str:
-    return f"{root.rstrip('/')}/{relative}"
+def run_logged(
+    argv: list[str], log_path: Path, *, env: dict[str, str] | None = None
+) -> tuple[str, str, int, str]:
+    command = shlex.join(argv)
+    with log_path.open("x", encoding="utf-8") as output:
+        result = subprocess.run(argv, cwd=ROOT, env=env, stdout=output, stderr=subprocess.STDOUT)
+    text = log_path.read_text(encoding="utf-8", errors="replace")
+    if result.returncode != 0:
+        raise RuntimeError(f"command failed ({result.returncode}): {command}\nlog: {log_path}\n{text}")
+    return text, str(log_path), result.returncode, command
 
 
 def parse_kv_line(line: str) -> tuple[str, dict[str, str]]:
@@ -90,33 +93,24 @@ def parse_log(text: str) -> dict[str, Any]:
 
 
 def run_case(
-    host: str,
-    root: str,
-    wineprefix: str,
+    wine: str,
+    exe: Path,
+    dll: Path,
+    wineprefix: Path,
+    log_dir: Path,
     mode: str,
     frames: int,
     speed: int,
     seed: int,
     log_name: str,
-)-> tuple[str, str, int, str]:
-    log_path = remote_path(root, f"{REMOTE_LOG_DIR}/{log_name}")
-    dll = f"Z:{remote_path(root, REMOTE_DLL)}"
-    command = (
-        f"cd {shlex.quote(root)} && "
-        f"WINEDEBUG=-all WINEPREFIX={shlex.quote(wineprefix)} "
-        f"{shlex.quote(WINE)} {shlex.quote(REMOTE_EXE)} {shlex.quote(dll)} "
-        f"{shlex.quote(mode)} {frames} {speed} {seed} > {shlex.quote(log_path)} 2>&1"
-    )
-    result = run_ssh(host, command, check=False)
-    if result.returncode != 0:
-        # The log is retained remotely even on failure and is included in the
-        # raised message for a reproducible diagnosis.
-        log_result = run_ssh(host, f"cat {shlex.quote(log_path)}", check=False)
-        raise RuntimeError(
-            f"{mode} probe failed ({result.returncode})\n{log_result.stdout}\n{log_result.stderr}"
-        )
-    fetched = run_ssh(host, f"cat {shlex.quote(log_path)}")
-    return fetched.stdout, log_path, result.returncode, command
+) -> tuple[str, str, int, str]:
+    env = dict(os.environ, WINEDEBUG=os.environ.get("WINEDEBUG", "-all"),
+               WINEPREFIX=str(wineprefix), WINEARCH="win64")
+    argv = [wine, str(exe), f"Z:{dll.as_posix()}", mode, str(frames), str(speed), str(seed)]
+    text, path, returncode, command = run_logged(argv, log_dir / log_name, env=env)
+    environment = shlex.join(["env", f"WINEDEBUG={env['WINEDEBUG']}",
+                             f"WINEPREFIX={wineprefix}", "WINEARCH=win64"])
+    return text, path, returncode, f"{environment} {command}"
 
 
 def parse_positive(text: str) -> dict[str, Any]:
@@ -235,67 +229,72 @@ def parse_natural(text: str) -> dict[str, Any]:
     }
 
 
-def remote_hashes(host: str, root: str) -> dict[str, str]:
-    paths = [REMOTE_SOURCE, REMOTE_EXE, REMOTE_DLL, CC, WINE]
-    command = "sha256sum " + " ".join(
-        shlex.quote(remote_path(root, path)) if path in {REMOTE_SOURCE, REMOTE_EXE, REMOTE_DLL} else shlex.quote(path)
-        for path in paths
+def source_commit(directory: Path) -> str | None:
+    result = subprocess.run(
+        ["git", "-C", str(directory), "rev-parse", "HEAD"],
+        capture_output=True, text=True,
     )
-    output = run_ssh(host, command).stdout
-    hashes: dict[str, str] = {}
-    for line in output.splitlines():
-        digest, path = line.split(None, 1)
-        hashes[path] = digest
-    return hashes
+    return result.stdout.strip() if result.returncode == 0 else None
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
-    parser.add_argument("--remote-host", default=DEFAULT_REMOTE_HOST)
-    parser.add_argument("--remote-root", default=DEFAULT_REMOTE_ROOT)
+    parser = argparse.ArgumentParser(description="Run the exact JP Wafel floor-null probe locally.")
+    parser.add_argument("--output", type=Path, help="new result JSON (default: timestamped results/local/)")
+    parser.add_argument("--log-dir", type=Path, help="new directory for raw logs")
+    parser.add_argument("--cc", default=os.environ.get("CC"), help="Win64 MinGW executable")
+    parser.add_argument("--wine", default=os.environ.get("WINE"), help="Wine64 executable")
+    parser.add_argument("--dll", type=Path, default=Path(os.environ.get("DLL", ROOT / "wafel/libsm64/sm64_jp.dll")))
+    parser.add_argument("--exe", type=Path, default=Path(os.environ.get("EXE", ROOT / "scripts/floor_null_probe.exe")))
+    parser.add_argument("--wineprefix", type=Path, default=Path(os.environ.get("WINEPREFIX", ROOT / ".wine-wafel")))
     parser.add_argument("--natural-frames", type=int, default=4096)
     parser.add_argument("--speed", type=int, default=3)
     parser.add_argument("--seed", type=int, default=539362)
     args = parser.parse_args()
 
-    if not SOURCE.exists():
-        raise RuntimeError(f"missing probe source: {SOURCE}")
+    if args.natural_frames < 1 or args.speed not in range(4) or not 0 <= args.seed < 2**64:
+        parser.error("--natural-frames must be positive, --speed 0..3, and --seed an unsigned 64-bit integer")
+    run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S.%fZ")
+    args.output = (args.output or ROOT / f"results/local/floor_null_fallback_probe_{run_id}.json").resolve()
+    log_dir = (args.log_dir or args.output.with_suffix(".logs")).resolve()
+    if args.output.exists() or log_dir.exists():
+        parser.error("output and log directory must be new; historical results are never overwritten")
+    exe = args.exe.expanduser().resolve()
+    dll = args.dll.expanduser().resolve()
+    wineprefix = args.wineprefix.expanduser().resolve()
+    cc = resolve_tool(args.cc, "x86_64-w64-mingw32-gcc")
+    wine = resolve_tool(args.wine, "wine")
+    wrapper = ROOT / "scripts/windows_tool.sh"
+    container_cc = Path(cc).resolve() == wrapper
+    container_wine = Path(wine).resolve() == wrapper
+    if container_cc or container_wine:
+        artifacts = {"DLL": dll, "EXE": exe}
+        if container_wine:
+            artifacts["WINEPREFIX"] = wineprefix
+        for label, path in artifacts.items():
+            if not path.is_relative_to(ROOT):
+                parser.error(
+                    f"container {label} must resolve inside {ROOT}: {path}; "
+                    "copy artifacts under the project or select native --cc/--wine tools"
+                )
+    if not dll.is_file():
+        parser.error(f"missing {dll}; run scripts/setup_wafel.sh --rom /path/to/your/JP-ROM")
+    dll_hash = sha256_file(dll)
+    if dll_hash != EXPECTED_DLL_SHA256:
+        parser.error(f"incompatible DLL SHA256 {dll_hash}; required exact historical image {EXPECTED_DLL_SHA256}")
     source_hash = sha256_file(SOURCE)
-    remote_root = args.remote_root.rstrip("/")
-    remote_log_dir = remote_path(remote_root, REMOTE_LOG_DIR)
-    run_ssh(args.remote_host, f"mkdir -p {shlex.quote(remote_log_dir)}")
-    subprocess.run(
-        ["scp", str(SOURCE), f"{args.remote_host}:{remote_path(remote_root, REMOTE_SOURCE)}"],
-        check=True,
-    )
-
-    compile_command = (
-        f"cd {shlex.quote(remote_root)} && "
-        f"{shlex.quote(CC)} -O2 -std=c11 -Wall -Wextra "
-        f"-L{shlex.quote(MCFGTHREAD_LIB)} -o {shlex.quote(REMOTE_EXE)} {shlex.quote(REMOTE_SOURCE)}"
-    )
-    compile_log = remote_path(remote_root, f"{REMOTE_LOG_DIR}/compile.log")
-    compile_run = run_ssh(
-        args.remote_host,
-        f"{compile_command} > {shlex.quote(compile_log)} 2>&1",
-        check=False,
-    )
-    if compile_run.returncode != 0:
-        log = run_ssh(args.remote_host, f"cat {shlex.quote(compile_log)}", check=False)
-        raise RuntimeError(f"remote compile failed:\n{log.stdout}\n{log.stderr}")
-
-    wineprefix = remote_path(remote_root, ".wine-wafel")
-    commands = [
-        f"scp {SOURCE} {args.remote_host}:{remote_path(remote_root, REMOTE_SOURCE)}",
-        compile_command,
-    ]
+    header_hash = sha256_file(HEADER)
+    log_dir.mkdir(parents=True)
+    exe.parent.mkdir(parents=True, exist_ok=True)
+    compile_args = [cc, "-O2", "-std=c11", "-Wall", "-Wextra", "-static-libgcc",
+                    "-o", str(exe), str(SOURCE), "-lbcrypt", "-lm"]
+    compile_text, compile_log, compile_rc, compile_command = run_logged(compile_args, log_dir / "compile.log")
+    commands = [compile_command]
     logs: list[dict[str, Any]] = []
 
     def record_log(path: str, text: str, command: str, returncode: int) -> None:
         logs.append(
             {
-                "remote_path": path,
+                "path": path,
                 "sha256": sha256_bytes(text.encode("utf-8")),
                 "bytes_utf8": len(text.encode("utf-8")),
                 "command": command,
@@ -303,13 +302,14 @@ def main() -> None:
             }
         )
 
-    compile_text = run_ssh(args.remote_host, f"cat {shlex.quote(compile_log)}").stdout
-    record_log(compile_log, compile_text, compile_command, compile_run.returncode)
+    record_log(compile_log, compile_text, compile_command, compile_rc)
 
     positive_text, positive_log, positive_rc, positive_command = run_case(
-        args.remote_host,
-        remote_root,
+        wine,
+        exe,
+        dll,
         wineprefix,
+        log_dir,
         "positive",
         0,
         args.speed,
@@ -320,9 +320,11 @@ def main() -> None:
     record_log(positive_log, positive_text, positive_command, positive_rc)
 
     sweep_text, sweep_log, sweep_rc, sweep_command = run_case(
-        args.remote_host,
-        remote_root,
+        wine,
+        exe,
+        dll,
         wineprefix,
+        log_dir,
         "sweep",
         0,
         args.speed,
@@ -333,9 +335,11 @@ def main() -> None:
     record_log(sweep_log, sweep_text, sweep_command, sweep_rc)
 
     natural_text, natural_log, natural_rc, natural_command = run_case(
-        args.remote_host,
-        remote_root,
+        wine,
+        exe,
+        dll,
         wineprefix,
+        log_dir,
         "natural",
         args.natural_frames,
         args.speed,
@@ -375,38 +379,41 @@ def main() -> None:
         and update["one_update_y_delta"] >= 500.0
     )
 
-    hashes = remote_hashes(args.remote_host, remote_root)
-    remote_source = remote_path(remote_root, REMOTE_SOURCE)
-    remote_exe = remote_path(remote_root, REMOTE_EXE)
-    remote_dll = remote_path(remote_root, REMOTE_DLL)
-    compiler_hash = hashes.get(CC)
+    source_artifacts = {
+        str(path.relative_to(ROOT)): sha256_file(path) if path.is_file() else None
+        for path in [ROOT / "sm64/src/game/mario.c", ROOT / "sm64/build/jp/sm64.jp.map",
+                     ROOT / "sm64/build/jp/sm64.jp.elf"]
+    }
     orchestrator_hash = sha256_file(Path(__file__))
     result: dict[str, Any] = {
         "status": "pass" if positive_proven and natural["completed_updates"] == natural["requested_frames"] else "fail",
-        "run_id": "20260812",
+        "run_id": run_id,
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "execution": {"mode": "local", "host": socket.gethostname(), "root": str(ROOT),
+                      "wineprefix": str(wineprefix)},
         "inputs": {
             "probe_source": str(SOURCE.relative_to(ROOT)),
             "probe_source_sha256": source_hash,
+            "dll_guard_header": str(HEADER.relative_to(ROOT)),
+            "dll_guard_header_sha256": header_hash,
             "orchestrator_sha256": orchestrator_hash,
-            "remote_probe_source_sha256": hashes.get(remote_source),
-            "probe_executable_remote": remote_exe,
-            "probe_executable_sha256": hashes.get(remote_exe),
-            "libsm64_dll_remote": remote_dll,
-            "libsm64_dll_sha256": hashes.get(remote_dll),
-            "compiler": CC,
-            "compiler_sha256": compiler_hash,
-            "wine": WINE,
-            "wine_sha256": hashes.get(WINE),
-            "sm64_source_commit": "9921382a68bb0c865e5e45eb594d9c64db59b1af",
-            "sm64_mario_c_sha256_remote": "a16936e42951b0ecf232fbbdb50d9f596bb8f59d13cf5269e5ba9537bca9b26e",
-            "sm64_jp_map_sha256_remote": "23499f4f66f4d5a67d31d09c5816f4d5e3bf3478eb7dddb5fff440649721650b",
-            "sm64_jp_elf_sha256_remote": "5127672dd7e98022639ee053ee7816f0d646afd42b61c5c5129549b31468eac2",
-            "wafel_source_commit": "5b808b60af15d316a5e2b0f87db34421d6225b57",
+            "probe_executable": str(exe),
+            "probe_executable_sha256": sha256_file(exe),
+            "libsm64_dll": str(dll),
+            "libsm64_dll_sha256": dll_hash,
+            "compiler": cc,
+            "compiler_sha256": sha256_file(Path(cc)),
+            "compiler_version": subprocess.check_output([cc, "--version"], cwd=ROOT, text=True).strip(),
+            "wine": wine,
+            "wine_sha256": sha256_file(Path(wine)),
+            "wine_version": subprocess.check_output([wine, "--version"], cwd=ROOT, text=True).strip(),
+            "sm64_source_commit": source_commit(ROOT / "sm64"),
+            "source_artifacts_sha256": source_artifacts,
+            "wafel_source_commit": source_commit(ROOT / "wafel"),
         },
         "commands": commands,
         "completion": {
-            "compile_returncode": compile_run.returncode,
+            "compile_returncode": compile_rc,
             "positive_returncode": positive_rc,
             "sweep_returncode": sweep_rc,
             "natural_returncode": natural_rc,
@@ -416,6 +423,7 @@ def main() -> None:
         "source_behavior": {
             "source_file": "sm64/src/game/mario.c",
             "source_lines": "1318-1330",
+            "reference_commit": "9921382a68bb0c865e5e45eb594d9c64db59b1af",
             "preconditions": [
                 "f32_find_wall_collision has run on MarioState.pos",
                 "first find_floor(pos.x,pos.y,pos.z,&m->floor) returns a NULL surface",
@@ -459,7 +467,7 @@ def main() -> None:
             "domain": {
                 "initialization": "bootstrap_ttc: sm64_init, init_mario_from_save_file, TTC level/area/act selection, one game update",
                 "post_bootstrap_state_writes": "only gControllerPads button/stick bytes; no MarioState, Object, floor, platform, RAM, or field injection",
-                "controller_sequence": "PRNG seed 539362; button palette {0, L, R, U, L+R}; stick_x=stick_y=0 each frame",
+                "controller_sequence": f"PRNG seed {natural['seed']}; button palette {{0, L, R, U, L+R}}; stick_x=stick_y=0 each frame",
                 "speed": natural["speed"],
                 "frames_requested": natural["requested_frames"],
             },
@@ -467,7 +475,11 @@ def main() -> None:
             "completed_updates": natural["completed_updates"],
             "branch_hits": natural["branch_hits"],
             "representative_frames": natural["representative_frames"],
-            "bounded_negative": "No floor-null branch execution occurred in this 4096-update controller-only native DLL domain; this does not prove absence from all reachable game states or all input movies.",
+            "bounded_negative": (
+                f"No floor-null branch execution occurred in this {natural['completed_updates']}-update "
+                "controller-only native DLL domain; this does not prove absence from all reachable game states or all input movies."
+                if natural["branch_hits"] == 0 else None
+            ),
         },
         "synthetic_sweep": {
             "domain": "5 physical Y values x 6 graphical Y values; physical x/z=(10000,10000) outside loaded TTC collision, graphical x/z=(800,1900), direct update_mario_geometry_inputs call",
@@ -500,8 +512,11 @@ def main() -> None:
         ],
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
+    with args.output.open("x", encoding="utf-8") as output:
+        output.write(json.dumps(result, indent=2, sort_keys=True) + "\n")
     print(json.dumps(result, indent=2, sort_keys=True))
+    if result["status"] != "pass":
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

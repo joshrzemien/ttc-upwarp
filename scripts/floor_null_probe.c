@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "wafel_jp_dll.h"
+
 /* Wafel's 64-bit libsm64 keeps MarioState's scalar layout but widens object
  * pointers.  These offsets are checked against the JP DLL disassembly in the
  * accompanying result. */
@@ -573,10 +575,8 @@ int main(int argc, char **argv) {
     int speed = argc > 4 ? atoi(argv[4]) : TTC_SPEED_STOPPED;
     uint64_t seed = argc > 5 ? strtoull(argv[5], NULL, 0) : 0x20260812;
 
-    HMODULE module = LoadLibraryA(module_path);
+    HMODULE module = load_wafel_jp_dll(module_path);
     if (module == NULL) {
-        fprintf(stderr, "LoadLibrary failed for %s (error %lu)\n", module_path,
-                GetLastError());
         return 1;
     }
     game_fn init = require_game_fn(module, "sm64_init");

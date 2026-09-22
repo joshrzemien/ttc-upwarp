@@ -1,0 +1,35 @@
+diff --git i/Makefile w/Makefile
+--- i/Makefile
++++ w/Makefile
+@@ -580,9 +580,9 @@
+ $(BUILD_DIR)/%.elf: $(BUILD_DIR)/%.o
+ 	$(call print,Linking ELF file:,$<,$@)
+ 	$(V)$(LD) -e 0 -Ttext=$(SEGMENT_ADDRESS) -Map $@.map -o $@ $<
+-# Override for leveldata.elf, which otherwise matches the above pattern
++# Use explicit level targets so a missing texture ELF cannot select the generic rule.
+ .SECONDEXPANSION:
+-$(BUILD_DIR)/levels/%/leveldata.elf: $(BUILD_DIR)/levels/%/leveldata.o $(BUILD_DIR)/bin/$$(TEXTURE_BIN).elf
++$(LEVEL_FILES:%=$(BUILD_DIR)/levels/%.elf): $(BUILD_DIR)/levels/%/leveldata.elf: $(BUILD_DIR)/levels/%/leveldata.o $(BUILD_DIR)/bin/$$(TEXTURE_BIN).elf
+ 	$(call print,Linking ELF file:,$<,$@)
+ 	$(V)$(LD) -e 0 -Ttext=$(SEGMENT_ADDRESS) -Map $@.map --just-symbols=$(BUILD_DIR)/bin/$(TEXTURE_BIN).elf -o $@ $<
+ 
+diff --git i/tools/armips.cpp w/tools/armips.cpp
+index 271bf55..c313f52 100644
+--- i/tools/armips.cpp
++++ w/tools/armips.cpp
+@@ -32,7 +32,6 @@ SOFTWARE.
+ 
+ 
+ #define _CRT_SECURE_NO_WARNINGS
+-#undef __STRICT_ANSI__
+ 
+ #if defined(__clang__)
+ #if __has_feature(cxx_exceptions)
+@@ -49,6 +48,7 @@ SOFTWARE.
+ #endif
+ 
+ #include <cstdio>
++#include <cstdint>
+ #include <vector>
+ #include <cstdlib>
+ #include <cstdarg>

@@ -3,18 +3,18 @@
 
 The script intentionally compares only localized Mario image coordinates.  It does
 not use full-frame similarity, does not treat VOD frames as N64 VIs, and never
-fills a failed localization with an interpolated coordinate.  Images are fetched
-from the hash-bound remote paths in the two manifests when they are not already
-present in the cache.
+fills a failed localization with an interpolated coordinate. Images are read from
+local manifest paths or explicitly mapped historical paths, then hash-verified.
+SSH fetching requires an explicit --remote-host; manifest host labels are inert.
 """
 from __future__ import annotations
 
 import argparse
 import hashlib
+import io
 import json
 import math
 import os
-import subprocess
 import sys
 from pathlib import Path
 from typing import Any, Iterable
@@ -24,10 +24,12 @@ import numpy as np
 import PIL
 from PIL import Image
 
+from extract_vod_fit_targets import parse_path_map, read_asset_bytes
+
 ROOT = Path(__file__).resolve().parents[1]
 TARGET_MANIFEST_DEFAULT = ROOT / "results/vod_fit_targets.json"
 RENDER_MANIFEST_DEFAULT = ROOT / "results/vod_fit_render_manifest.json"
-RESULT_DEFAULT = ROOT / "results/vod_render_motion_fit.json"
+RESULT_DEFAULT = ROOT / "media/vod_render_motion_fit.json"
 CACHE_DEFAULT = Path(os.environ.get("VOD_MOTION_CACHE", "/tmp/vod_motion_cache"))
 SCENARIOS = ("reachable_no_mutation", "synthetic_no_flip", "synthetic_bit_clear")
 EVENT_ENCODED = (431, 432)
@@ -168,35 +170,32 @@ def fetch_and_verify(
     expected_dimensions: tuple[int, int],
     destination: Path,
     remote_host: str | None,
+    path_maps: Iterable[tuple[Path, Path]] = (),
 ) -> dict[str, Any]:
     destination.parent.mkdir(parents=True, exist_ok=True)
-    if not destination.exists():
-        if not remote_host:
-            raise RuntimeError(f"missing cached image and no remote host: {source_path}")
-        result = subprocess.run(
-            ["scp", "-q", f"{remote_host}:{source_path}", str(destination)],
-            check=False,
-            capture_output=True,
-            text=True,
-            timeout=180,
-        )
-        if result.returncode:
-            raise RuntimeError(f"scp failed for {source_path}: {result.stderr.strip()}")
-    raw = destination.read_bytes()
+    cached = destination.is_file()
+    if cached:
+        raw = destination.read_bytes()
+        source_record: dict[str, Any] = {"transport": "cache", "path": str(destination)}
+    else:
+        raw, source_record = read_asset_bytes(source_path, remote_host, path_maps)
     digest = sha256_bytes(raw)
     if digest != expected_sha256:
         raise RuntimeError(f"image hash mismatch for {source_path}: {digest} != {expected_sha256}")
     if len(raw) != int(expected_size):
         raise RuntimeError(f"image size mismatch for {source_path}: {len(raw)} != {expected_size}")
-    with Image.open(destination) as image:
+    with Image.open(io.BytesIO(raw)) as image:
         image.load()
         dimensions = tuple(int(x) for x in image.size)
         mode = image.mode
     if dimensions != expected_dimensions:
         raise RuntimeError(f"image dimensions mismatch for {source_path}: {dimensions} != {expected_dimensions}")
+    if not cached:
+        destination.write_bytes(raw)
     return {
         "remote_path": source_path,
         "cache_path": str(destination),
+        "source": source_record,
         "sha256": digest,
         "size_bytes": len(raw),
         "width": dimensions[0],
@@ -291,6 +290,7 @@ def stage_images(
     render: dict[str, Any],
     cache_root: Path,
     remote_host: str | None,
+    path_maps: Iterable[tuple[Path, Path]] = (),
 ) -> tuple[dict[int, Path], dict[str, dict[int, Path]], dict[str, Any]]:
     target_paths: dict[int, Path] = {}
     target_consumed: list[dict[str, Any]] = []
@@ -304,6 +304,7 @@ def stage_images(
             (340, 215),
             destination,
             remote_host,
+            path_maps,
         )
         record.update({"encoded_index": encoded, "relation": item["relation"]})
         target_paths[encoded] = destination
@@ -328,6 +329,7 @@ def stage_images(
                     (640, 480),
                     destination,
                     remote_host,
+                    path_maps,
                 )
                 record.update({"image_ordinal": int(image["image_ordinal"])})
                 by_path[remote_path] = destination
@@ -1577,12 +1579,13 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     render = json.loads(render_path.read_text())
     target_validation = validate_target_manifest(target, target_path)
     render_validation = validate_render_manifest(render, render_path)
-    remote_host = args.remote_host or render.get("remote_host")
+    remote_host = args.remote_host
     target_paths, scenario_paths, image_consumption = stage_images(
         target,
         render,
         Path(args.cache_dir).resolve(),
         remote_host,
+        args.path_map,
     )
     vod_points, vod_tracker_summary = image_sequence_track(target_paths, "vod")
     vod_track = make_vod_track(target, target_paths, vod_points, vod_tracker_summary.get("failure_flags_by_index"))
@@ -1701,7 +1704,8 @@ def main() -> int:
     parser.add_argument("--render-manifest", default=str(RENDER_MANIFEST_DEFAULT))
     parser.add_argument("--output", default=str(RESULT_DEFAULT))
     parser.add_argument("--cache-dir", default=str(CACHE_DEFAULT))
-    parser.add_argument("--remote-host", default=None)
+    parser.add_argument("--remote-host", help="explicit SSH fallback for assets missing locally")
+    parser.add_argument("--path-map", action="append", type=parse_path_map, default=[], metavar="OLD=LOCAL", help="relocate manifest path prefixes without altering provenance; repeatable")
     args = parser.parse_args()
     try:
         result = run(args)

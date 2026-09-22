@@ -61,16 +61,20 @@ def main() -> None:
     parser.add_argument("--rom", type=Path)
     parser.add_argument("--movie", type=Path)
     parser.add_argument("--lua", type=Path)
+    parser.add_argument("--data-dir", type=Path)
+    parser.add_argument("--config-dir", type=Path)
     args = parser.parse_args()
 
     root = args.root.resolve()
-    emulator = args.emulator or root / "Fuzzy64/mupen64plus-ui-console/projects/unix/mupen64plus"
-    core = args.core or root / "Fuzzy64/mupen64plus-core/projects/unix/libmupen64plus.so.2.0.0"
-    rsp = args.rsp or root / "Fuzzy64/mupen64plus-rsp-hle/projects/unix/mupen64plus-rsp-hle.so"
-    savestate = args.savestate or root / "emulator/tas26.jp.m64p.st"
-    rom = args.rom or root / "emulator/sm64.jp.z64"
-    movie = args.movie or root / "TTC-Upwarp-Overlay/Tas Attempts/tas26.m64"
-    lua = args.lua or root / "scripts/single_bit_y_scan.lua"
+    emulator = (args.emulator or root / "emulator/bin/mupen64plus").expanduser().resolve()
+    core = (args.core or root / "emulator/lib/libmupen64plus.so.2.0.0").expanduser().resolve()
+    rsp = (args.rsp or root / "emulator/lib/mupen64plus/mupen64plus-rsp-hle.so").expanduser().resolve()
+    savestate = (args.savestate or root / "emulator/tas26.jp.m64p.st").expanduser().resolve()
+    rom = (args.rom or root / "emulator/sm64.jp.z64").expanduser().resolve()
+    movie = (args.movie or root / "TTC-Upwarp-Overlay/Tas Attempts/tas26.m64").expanduser().resolve()
+    lua = (args.lua or root / "scripts/single_bit_y_scan.lua").expanduser().resolve()
+    data_dir = (args.data_dir or root / "emulator/share/mupen64plus").expanduser().resolve()
+    config_dir = (args.config_dir or root / "emulator/config").expanduser().resolve()
 
     dependencies = [emulator, core, rsp, savestate, rom, movie, lua]
     missing = [str(path) for path in dependencies if not path.is_file()]
@@ -79,6 +83,8 @@ def main() -> None:
 
     command = [
         str(emulator),
+        "--gfx", "dummy", "--audio", "dummy", "--input", "dummy", "--nosaveoptions",
+        "--datadir", str(data_dir), "--configdir", str(config_dir),
         "--nospeedlimit",
         "--emumode",
         "0",

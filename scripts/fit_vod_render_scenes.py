@@ -13,7 +13,6 @@ import hashlib
 import io
 import json
 import math
-import subprocess
 import sys
 from pathlib import Path
 from typing import Any, Iterable
@@ -21,10 +20,12 @@ from typing import Any, Iterable
 import numpy as np
 from PIL import Image
 
+from extract_vod_fit_targets import parse_path_map, read_asset_bytes
+
 ROOT = Path(__file__).resolve().parents[1]
 TARGET_MANIFEST = ROOT / "results" / "vod_fit_targets.json"
 RENDER_MANIFEST = ROOT / "results" / "vod_fit_render_manifest.json"
-DEFAULT_OUTPUT = ROOT / "results" / "vod_render_scene_fit.json"
+DEFAULT_OUTPUT = ROOT / "media" / "vod_render_scene_fit.json"
 DEFAULT_CACHE = Path("/tmp") / "ttc-vod-scene-png-cache"
 SCENARIOS = ("reachable_no_mutation", "synthetic_no_flip", "synthetic_bit_clear")
 TARGET_START = 340
@@ -129,11 +130,13 @@ def cache_path(cache_dir: Path, namespace: str, remote_path: str) -> Path:
 
 
 def fetch_verified_png(
-    *, host: str, remote_path: str, expected_sha256: str, expected_size: int,
+    *, host: str | None, remote_path: str, expected_sha256: str, expected_size: int,
     expected_width: int, expected_height: int, cache_file: Path,
+    path_maps: Iterable[tuple[Path, Path]] = (),
 ) -> tuple[np.ndarray, dict[str, Any]]:
-    """Fetch one manifest-listed PNG, or use a previously verified temp cache."""
+    """Load one manifest-listed PNG locally, from verified cache, or explicit SSH."""
     raw: bytes | None = None
+    source_record: dict[str, Any] = {"transport": "cache", "path": str(cache_file)}
     cache_file.parent.mkdir(parents=True, exist_ok=True)
     if cache_file.exists():
         candidate = cache_file.read_bytes()
@@ -142,16 +145,7 @@ def fetch_verified_png(
         else:
             cache_file.unlink()
     if raw is None:
-        result = subprocess.run(
-            ["ssh", host, "cat", "--", remote_path], check=False,
-            capture_output=True, timeout=180,
-        )
-        if result.returncode != 0:
-            raise RuntimeError(
-                f"failed to fetch {remote_path} from {host}: status={result.returncode} "
-                f"stderr={result.stderr.decode(errors='replace')}"
-            )
-        raw = bytes(result.stdout)
+        raw, source_record = read_asset_bytes(remote_path, host, path_maps)
         if len(raw) != expected_size or sha256_bytes(raw) != expected_sha256:
             raise AssertionError(
                 f"{remote_path}: fetched bytes fail manifest hash/size "
@@ -168,16 +162,23 @@ def fetch_verified_png(
     pixels = decode_png(raw, expected_width, expected_height, remote_path)
     return pixels, {
         "remote_path": remote_path, "cache_path": str(cache_file),
+        "source": source_record,
         "sha256": actual_sha256, "size_bytes": actual_size,
         "width": expected_width, "height": expected_height,
         "hash_verified": True, "dimensions_verified": True,
     }
 
 
-def load_inputs(cache_dir: Path) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+def load_inputs(
+    cache_dir: Path,
+    target_path: Path = TARGET_MANIFEST,
+    render_path: Path = RENDER_MANIFEST,
+    remote_host: str | None = None,
+    path_maps: Iterable[tuple[Path, Path]] = (),
+) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
     """Load and hash-check every target and every unique rendered-row PNG."""
-    target_raw = TARGET_MANIFEST.read_bytes()
-    render_raw = RENDER_MANIFEST.read_bytes()
+    target_raw = target_path.read_bytes()
+    render_raw = render_path.read_bytes()
     target_manifest = json.loads(target_raw)
     render_manifest = json.loads(render_raw)
     if target_manifest.get("schema_version") != 1 or render_manifest.get("schema_version") != 1:
@@ -207,7 +208,7 @@ def load_inputs(cache_dir: Path) -> tuple[dict[str, Any], dict[str, Any], dict[s
         if int(row["width"]) != 340 or int(row["height"]) != 215:
             raise AssertionError(f"{filename}: row dimensions changed")
         pixels, record = fetch_verified_png(
-            host=str(render_manifest.get("remote_host", "roach")), remote_path=remote_path,
+            host=remote_host, remote_path=remote_path, path_maps=path_maps,
             expected_sha256=str(expected["sha256"]), expected_size=int(expected["size_bytes"]),
             expected_width=340, expected_height=215, cache_file=cache_path(cache_dir, "vod", remote_path),
         )
@@ -238,7 +239,7 @@ def load_inputs(cache_dir: Path) -> tuple[dict[str, Any], dict[str, Any], dict[s
                 raise AssertionError(f"{scenario} VI{row['vi']}: unexpected PNG metadata")
             if remote_path not in scenario_pixels[scenario]:
                 pixels, record = fetch_verified_png(
-                    host=str(render_manifest.get("remote_host", "roach")), remote_path=remote_path,
+                    host=remote_host, remote_path=remote_path, path_maps=path_maps,
                     expected_sha256=str(image["sha256"]), expected_size=int(image["size_bytes"]),
                     expected_width=640, expected_height=480, cache_file=cache_path(cache_dir, scenario, remote_path),
                 )
@@ -257,6 +258,8 @@ def load_inputs(cache_dir: Path) -> tuple[dict[str, Any], dict[str, Any], dict[s
     }
     data = {
         "target_manifest": target_manifest, "render_manifest": render_manifest,
+        "target_manifest_path": str(target_path.resolve()), "render_manifest_path": str(render_path.resolve()),
+        "remote_host": remote_host,
         "target_rows": target_rows, "target_pixels": target_pixels, "target_records": target_records,
         "scenario_rows": scenario_rows, "scenario_pixels": scenario_pixels,
         "scenario_records": scenario_records, "input_hashes": input_hashes,
@@ -902,15 +905,16 @@ def build_report(target_manifest: dict[str, Any], render_manifest: dict[str, Any
         "cross_domain_positive_control_absent": calibration["cross_domain_positive_control_absent"],
         "classification_note": "scenario statuses are indeterminate because no known-positive VOD-to-Glide64mk2 pair calibrates renderer/lighting/texture transfer; strict within-domain threshold results remain diagnostic",
         "analyzer": {
-            "path": str(Path(__file__).relative_to(ROOT)), "sha256": script_hash,
+            "path": str(Path(__file__).resolve().relative_to(ROOT)), "sha256": script_hash,
             "python": sys.version.split()[0], "numpy": np.__version__, "pillow": Image.__version__,
             "deterministic": True,
             "feature_grid": {"width": FEATURE_WIDTH, "height": FEATURE_HEIGHT, "resampling": "bicubic"},
             "score_formula": "0.58 normalized-luma correlation + 0.42 gradient-structure correlation; each cosine mapped to [0,1]",
         },
         "inputs": {
-            "target_manifest": str(TARGET_MANIFEST.relative_to(ROOT)),
-            "render_manifest": str(RENDER_MANIFEST.relative_to(ROOT)),
+            "target_manifest": data["target_manifest_path"],
+            "render_manifest": data["render_manifest_path"],
+            "remote_host": data["remote_host"],
             "hashes": {**data["input_hashes"], "verified_png_records_sha256": verified_records_digest},
             "remote_png_consumption": {
                 "target_unique_png_count": len(data["target_records"]),
@@ -974,9 +978,23 @@ def build_report(target_manifest: dict[str, Any], render_manifest: dict[str, Any
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__); parser.add_argument("--cache-dir", type=Path, default=DEFAULT_CACHE, help="temporary cache for verified remote PNG bytes"); parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT); args = parser.parse_args(argv)
-    target_manifest, render_manifest, data = load_inputs(args.cache_dir); report = build_report(target_manifest, render_manifest, data, args.cache_dir); args.output.parent.mkdir(parents=True, exist_ok=True); args.output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    statuses = ", ".join(f"{scenario}={report['scenarios'][scenario]['status']}" for scenario in SCENARIOS); print(f"wrote {args.output}: {statuses}; joint candidates/scenario={report['temporal_search']['joint_candidate_count_per_scenario']}"); return 0
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--cache-dir", type=Path, default=DEFAULT_CACHE, help="temporary cache for hash-verified PNG bytes")
+    parser.add_argument("--target-manifest", type=Path, default=TARGET_MANIFEST)
+    parser.add_argument("--render-manifest", type=Path, default=RENDER_MANIFEST)
+    parser.add_argument("--remote-host", help="explicit SSH fallback for assets missing locally")
+    parser.add_argument("--path-map", action="append", type=parse_path_map, default=[], metavar="OLD=LOCAL", help="relocate manifest path prefixes without altering provenance; repeatable")
+    parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
+    args = parser.parse_args(argv)
+    target_manifest, render_manifest, data = load_inputs(
+        args.cache_dir, args.target_manifest, args.render_manifest, args.remote_host, args.path_map
+    )
+    report = build_report(target_manifest, render_manifest, data, args.cache_dir)
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    statuses = ", ".join(f"{scenario}={report['scenarios'][scenario]['status']}" for scenario in SCENARIOS)
+    print(f"wrote {args.output}: {statuses}; joint candidates/scenario={report['temporal_search']['joint_candidate_count_per_scenario']}")
+    return 0
 
 
 if __name__ == "__main__": raise SystemExit(main())

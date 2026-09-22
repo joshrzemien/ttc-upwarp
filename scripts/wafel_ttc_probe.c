@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "wafel_jp_dll.h"
+
 typedef void (*game_fn)(void);
 
 static FARPROC require_symbol(HMODULE module, const char *name) {
@@ -38,9 +40,8 @@ static float load_f32(const uint8_t *p) {
 int main(int argc, char **argv) {
     const char *module_path = argc > 1 ? argv[1] : "sm64_jp.dll";
     int frames = argc > 2 ? atoi(argv[2]) : 240;
-    HMODULE module = LoadLibraryA(module_path);
+    HMODULE module = load_wafel_jp_dll(module_path);
     if (module == NULL) {
-        fprintf(stderr, "LoadLibrary failed for %s (error %lu)\n", module_path, GetLastError());
         return 1;
     }
 

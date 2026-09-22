@@ -6,6 +6,12 @@ This repository contains the evidence, tooling, raw search output, and bounded t
 
 **This is not a bounty claim.** No normal-gameplay trigger or start-to-finish `.m64` was found.
 
+**Local reconstruction (2026-09-22):** the former `roach` research host was
+lost without a backup; `quag` is its replacement. References below to assets
+retained on the research host describe the historical checkpoint, not current
+availability. The [local setup](#re-running-the-artifacts) rebuilds the tools
+and recoverable inputs without contacting that host.
+
 ![Incident comparison timeline](comparison_timeline.jpg)
 
 ## Result
@@ -165,124 +171,172 @@ The randomized campaigns and route trace remain bounded searches rather than exh
 
 ## Re-running the artifacts
 
-This repository intentionally excludes copyrighted ROM data, compiled third-party projects, and savestates. You need a legally obtained Japanese Super Mario 64 ROM with MD5:
-
-```text
-85d61f5525af708c9f1e84dce6dc10e9
-```
-
-The recorded environment used:
-
-- [`n64decomp/sm64`](https://github.com/n64decomp/sm64) at `9921382a68bb0c865e5e45eb594d9c64db59b1af`;
-- [`branpk/wafel`](https://github.com/branpk/wafel) at `5b808b60af15d316a5e2b0f87db34421d6225b57`;
-- [`danebou/Fuzzy64`](https://github.com/danebou/Fuzzy64);
-- [`danebou/TTC-Upwarp-Overlay`](https://github.com/danebou/TTC-Upwarp-Overlay);
-- MinGW-w64 and Wine for the Windows `libsm64` harness.
-
-The scripts preserve absolute paths from the research workstation and are archival rather than turnkey packaging. Update `ROOT`, emulator paths, the Wine path, and the Wafel DLL path for your environment before running them.
-
-On the recorded research host, the emulator differential reproduction is:
+### Complete local setup
 
 ```bash
-ssh roach 'cd /home/zman/projects/labs/ttc_upwarp && \
-  python3 scripts/run_reproduction.py --output /tmp/reproduction.json && \
-  diff -u results/reproduction.json /tmp/reproduction.json'
+python3 scripts/setup_environment.py
+source .venv/bin/activate
 ```
 
-The Wafel harness interface is:
+This builds the instrumented Fuzzy64 core, console, RSP and Glide64 plugin,
+GNU MIPS binutils, SM64 host tools, and all three Windows Wafel harnesses.
+It restores the upstream TAS corpus, converts the base savestate, regenerates
+the controller sequences, and downloads/extracts a fresh public video dataset.
+Use `--skip-media` to omit video retrieval. Existing source checkouts are not
+reset; conflicting patches fail rather than discard local changes.
 
-```text
-wafel_incident_fuzz.exe DLL SEED TRIALS WARMUP SPEED_MODE HORIZON RESET_MODE PROFILE
-```
+Prerequisites on Arch: `uv`, Docker access (unless native Wine and MinGW are
+installed), `base-devel`, `git`, `curl`, `nasm`, `pkgconf`, `sdl2-compat`, `zlib`,
+`libpng`, `lua51`, `libsodium`, `freetype2`, `libglvnd`, `glu`, and `ffmpeg`.
+The setup installs no system packages and needs no sudo. Missing native
+Wine/MinGW are provided by a project-scoped Debian container. Its wrappers
+mount only this checkout; keep DLLs, executables and Wine prefixes inside
+the project, or explicitly select native tools for external paths.
+Glide64 defaults to `HIRES=0` (no external high-resolution texture packs);
+`HIRES=1` also requires Boost headers/libraries.
 
-Profiles are `0` broad, `1` exact incident state, `2` local incident envelope, `3` integer X/Z grid, and `4` bit-clear positive control. `RESET_MODE` is `0` for a continuous evolving world or `1` for snapshot restoration.
+### Supply the game ROM
 
-Existing raw campaign logs can be summarized without the emulator dependencies:
+The setup script does not download ROMs. Supply your legally obtained original
+Japanese SM64 ROM; `.z64`, `.v64`, and `.n64` byte orders are accepted:
 
 ```bash
-python3 scripts/summarize_wafel_campaign.py \
-  results/wafel_fuzz/single_frame_400m \
-  --output /tmp/single_frame_400m_summary.json
+python3 scripts/setup_environment.py --rom /path/to/your/rom
 ```
 
-The new retained-input and route-trace audits run without a ROM or emulator:
+The normalized ROM must have MD5 `85d61f5525af708c9f1e84dce6dc10e9`.
+It is installed at `emulator/sm64.jp.z64`. With this input, setup also:
+
+- builds and compares the JP decompilation byte-for-byte;
+- unlocks Wafel's pinned encrypted JP DLL and verifies its exact SHA-256;
+- recaptures the reachable VI-475 state at `emulator/route_vi475.m64p`;
+- runs the injected/control emulator reproduction to `media/reproduction.json`.
+
+The DLL must hash to
+`a3dc4984628bfc2bcdc92eb2c3af47beae1472fd54c07a24c286046d7962f67b`.
+All native harnesses reject another DLL before loading it: the probes use
+private offsets, so a newly compiled but differently laid-out DLL is not a
+substitute. A setup run without the ROM prepares the tools and recoverable
+inputs but explicitly leaves game execution blocked.
+
+### Local layout and recovered inputs
+
+| Path | Purpose |
+| --- | --- |
+| `.venv/` | Python 3.12 with pinned NumPy, Pillow, headless OpenCV and yt-dlp |
+| `.tools/bin/` | Project-only Wine/MinGW container wrappers |
+| `emulator/bin/`, `emulator/lib/`, `emulator/share/` | Built emulator and runtime data |
+| `emulator/config/mupen64plus.cfg` | Local configuration; headless defaults |
+| `emulator/toolchain/mips64-elf-*` | GNU binutils 2.46.0 |
+| `emulator/tas26.jp.m64p.st` | Reconstructed base savestate |
+| `emulator/controller_equivalence_sequences.txt` | Regenerated 196,304 input sequences |
+| `emulator/route_vi475.{m64p,json,log}` | New ROM-dependent capture and provenance |
+| `media/` | Fresh videos, cadence audit, 191 target PNGs and generated reports |
+
+These local build/data directories and upstream checkouts are ignored by Git.
+The base savestate's SHA-256 matches the historical
+`2732c65808c54b74a85a97a18c50fa4c7fbb1afd85d60efcbd6d81ee796323a7`;
+the controller payload matches
+`763ce21139ef066b8560f1584c64b4d06d09958614f9a2ee9ee4e6907c538da4`.
+The original movies and `tas26.st` are available from the upstream overlay
+repository. Lost campaign aggregates, worker logs, route snapshots and emulator
+screenshots are **not** restored merely by restoring this base state.
+
+Fresh video downloads are not byte-identical to the historical media.
+`media/recovery.json`, `media/vod_cadence_audit.json` and
+`media/vod_fit_targets.json` bind the new data independently. Historical
+`results/` manifests remain unchanged; do not substitute fresh bytes beneath
+their recorded hashes or interpret a new run as the old run.
+
+The source pins are SM64 `9921382a68bb0c865e5e45eb594d9c64db59b1af`,
+Wafel `5b808b60af15d316a5e2b0f87db34421d6225b57`,
+Fuzzy64 `2757d269fcffc6225ec51e72ae953f6b30be9cc4`, and
+TTC-Upwarp-Overlay `8cc951f7221c3a3078a9924b723581a5995cf49e`.
+Linux compatibility changes are retained in `scripts/fuzzy64-linux-compat.patch`
+and `scripts/sm64-host-tools.patch`; the original Mario-Y instrumentation
+remains in `fuzzy64-mario-y-trace.patch`.
+
+### Verified recovery on quag
+
+The 2026-09-22 local verification completed with the exact Japanese ROM and
+unlocked DLL, a byte-identical decompilation build, and a successful
+`python3 scripts/setup_environment.py --skip-media` run.
+
+- `media/reproduction.json` is byte-identical to the historical reproduction:
+  the injected case lands at Y `-2487` on VI 150; the control lands at
+  Y `-5211` on VI 138.
+- `emulator/route_vi475.json` binds a fresh, complete route snapshot. Its bytes
+  are not claimed to match the lost historical snapshot.
+- `media/controller_smoke_campaign.json` records four real controller
+  candidates across two workers, including repeated snapshot restoration.
+- `media/vod_fit_render_manifest.json` validates all three 280-VI scenarios
+  and 388 nonblank 640×480 PNGs, captured using software OpenGL under Xvfb.
+- Fresh native Wafel positive/control and floor-null probes are retained under
+  `results/local/native_wafel_20260922T135822.904641Z/`; the ROM-wide static
+  multiply audit is `media/rom_mul_hazard_audit.json`.
+
+The compatibility patch fixes dummy-video DP completion, startup savestate
+ordering, graceful `Fuzzer:stop()` save completion, and Glide64mk2's ignored
+front/back screenshot-buffer argument. These fixes preserve the experiment's
+original placement, mutation, and landing assertions. The small verification
+runs do not recreate the lost full campaign aggregates.
+
+### Running locally
+
+Retained-evidence analysis does not require a ROM:
 
 ```bash
-python3 scripts/audit_reachable_artifacts.py \
-  --root . \
-  --output /tmp/reachable_artifact_integrity.json
-diff -u results/reachable_artifact_integrity.json \
-  /tmp/reachable_artifact_integrity.json
-
-python3 scripts/analyze_r4300_mul_hazards.py \
-  results/mips_trace_reachable_route.log.gz \
-  /tmp/r4300_mul_hazard_audit.json
-diff -u results/r4300_mul_hazard_audit.json \
-  /tmp/r4300_mul_hazard_audit.json
-
+python scripts/analyze_r4300_mul_hazards.py \
+  results/mips_trace_reachable_route.log.gz /tmp/ttc-mul-audit.json
+python scripts/audit_reachable_artifacts.py \
+  --root . --output /tmp/ttc-integrity.json
+python scripts/summarize_wafel_campaign.py \
+  results/wafel_fuzz/single_frame_400m --output /tmp/ttc-summary.json
+python scripts/extract_vod_fit_targets.py \
+  --validate-only --manifest media/vod_fit_targets.json
 ```
 
-The matched-ROM audit requires the byte-identical JP ROM/build and recorded MIPS toolchain on `roach`. Its artifact embeds this exact staged command:
+After supplying the ROM and completing setup:
 
 ```bash
-# Exact matched-ROM audit command, staged to the research host.
-scp scripts/audit_rom_mul_hazards.py roach:/tmp/audit_rom_mul_hazards.py
-scp scripts/audit_rom_mul_hazards.py roach:/tmp/audit_rom_hazards.repository.py
-scp results/sources.json roach:/tmp/sources.current.json
-scp results/sources.json roach:/tmp/sources.repository.json
-ssh roach 'python3 /tmp/audit_rom_mul_hazards.py \
-  --root /home/zman/projects/labs/ttc_upwarp \
-  --provenance /tmp/sources.current.json \
-  --provenance-repository /tmp/sources.repository.json \
-  --provenance-repository-label results/sources.json \
-  --repository-script /tmp/audit_rom_hazards.repository.py \
-  --repository-script-label scripts/audit_rom_mul_hazards.py \
-  --output /tmp/rom_mul_hazard_audit.json'
-scp roach:/tmp/rom_mul_hazard_audit.json /tmp/rom_mul_hazard_audit.json
-diff -u results/rom_mul_hazard_audit.json \
-  /tmp/rom_mul_hazard_audit.json
+python scripts/run_reproduction.py --output media/reproduction.json
+python scripts/audit_rom_mul_hazards.py --output media/rom_mul_hazards.json
+python scripts/probe_floor_null_fallback.py --natural-frames 4096
+WORKERS=1 TRIALS=100 PROFILE=4 RESET_MODE=1 SPEED_MODE=3 \
+  bash scripts/run_wafel_campaign.sh
+python scripts/run_controller_sequence_campaign.py \
+  emulator/controller_equivalence_sequences.txt emulator/route_vi475.m64p \
+  media/controller_campaign.json \
+  --movie results/reachable_route_p078_r078_a+000.m64
 ```
 
-The floor-null probe rebuilds and exercises the remote Wafel DLL resources on `roach`:
+The Wafel interface remains
+`DLL SEED TRIALS WARMUP SPEED_MODE HORIZON RESET_MODE PROFILE`.
+Profiles are `0` broad, `1` exact incident state, `2` local envelope,
+`3` integer X/Z grid, and `4` bit-clear positive control.
+`RESET_MODE=0` evolves the world continuously; `1` restores snapshots.
+`SPEED_MODE=3` stops TTC's machinery, as in the local native verification.
+Campaigns and floor probes create new local outputs, not historical reports.
+
+For rendering, use a working X11/Wayland display and the fresh dataset:
 
 ```bash
-python3 scripts/probe_floor_null_fallback.py \
-  --output /tmp/floor_null_fallback_probe.json
+python scripts/render_vod_fit_candidates.py \
+  --output media/vod_fit_render_manifest.json --result-dir media/vod_fit_renders
+python scripts/fit_vod_render_scenes.py \
+  --target-manifest media/vod_fit_targets.json \
+  --render-manifest media/vod_fit_render_manifest.json
+python scripts/fit_vod_render_motion.py \
+  --target-manifest media/vod_fit_targets.json \
+  --render-manifest media/vod_fit_render_manifest.json
 ```
 
-The complete fresh controller aggregate remains on the research workstation and can be checked without rerunning the campaign:
-
-```bash
-ssh roach 'cd /home/zman/projects/labs/ttc_upwarp && \
-  python3 scripts/validate_controller_sequence_campaign.py \
-  results/reachable_reassessment_20260812/controller_equivalence_campaign.json'
-```
-
-The VOD cadence artifact records its bounded yt-dlp retrieval, source-preserving PTS probe, input hashes, crop, and exact analyzer arguments. Re-running it requires the bounded media segment; no video is committed.
-
-The rendered-fit manifests retain every remote PNG hash and path. With those remote assets available on `roach`, the analyzers reproduce their reports from temporary local caches:
-
-```bash
-python3 scripts/fit_vod_render_scenes.py \
-  --cache-dir /tmp/ttc-vod-scene-png-cache
-
-python3 scripts/fit_vod_render_motion.py \
-  --cache-dir /tmp/vod_motion_cache \
-  --remote-host roach
-```
-
-Neither analyzer converts encoded frames into N64 cadence; both preserve the exact source-PTS gap recorded by the target manifest.
-
-The high-resolution audit additionally requires the original highlight bytes at the recorded SHA-256 and the 191 verified target PNGs:
-
-```bash
-python3 scripts/analyze_highlight_motion.py \
-  --media /tmp/ttc-highlight.webm \
-  --target-manifest results/vod_fit_targets.json \
-  --motion-result results/vod_render_motion_fit.json \
-  --cache-dir /tmp/vod_motion_cache/vod \
-  --output results/highlight_motion_audit.json
-```
+The highlight audit additionally needs the newly generated motion result;
+use its `--media-sha256` and `--media-size` options to bind the fresh highlight
+explicitly. Without those options it still requires the historical highlight.
+`--path-map OLD=LOCAL` relocates hash-identical assets without changing their
+identity. SSH is opt-in through `--remote-host`; local operation never contacts
+`roach` or `quag` over SSH.
 
 ## Primary references
 

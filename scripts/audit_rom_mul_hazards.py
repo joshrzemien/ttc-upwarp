@@ -892,12 +892,7 @@ def build_audit(args: argparse.Namespace) -> dict[str, Any]:
             "script_sha256": sha256_file(executed_script_path),
             "python_version": platform.python_version(),
             "python_implementation": platform.python_implementation(),
-            "staging_commands": [
-                "scp scripts/audit_rom_mul_hazards.py roach:/tmp/audit_rom_mul_hazards.py",
-                "scp scripts/audit_rom_mul_hazards.py roach:/tmp/audit_rom_hazards.repository.py",
-                "scp results/sources.json roach:/tmp/sources.current.json",
-                "scp results/sources.json roach:/tmp/sources.repository.json",
-            ],
+            "staging_commands": [],
             "command": shlex.join([str(item) for item in sys.argv]),
         },
         "inputs": {
@@ -1036,7 +1031,7 @@ def build_audit(args: argparse.Namespace) -> dict[str, Any]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Audit all matched JP ROM executable multiply hazards")
-    parser.add_argument("--root", type=Path, default=Path("."))
+    parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument("--rom", type=Path)
     parser.add_argument("--elf", type=Path)
     parser.add_argument("--map", dest="map", type=Path)
